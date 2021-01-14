@@ -9,7 +9,7 @@ CC = gcc
 CFLAGS = -Wall -g -I$(INCLUDE)
 
 # Αρχεία .o
-OBJS =  $(MODULES)/quic.o
+OBJS =  $(MODULES)/quic.o $(MODULES)/search.o
 
 # Το εκτελέσιμο πρόγραμμα
 EXEC = quic

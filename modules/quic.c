@@ -5,6 +5,7 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "search.h"
 
 int main(int argc, char* argv[])
 {
@@ -19,7 +20,6 @@ int main(int argc, char* argv[])
         return 1;
     }
     
-
     if(argc > 3)
     {
         for(int i = 1; i < argc; i++)
@@ -60,17 +60,9 @@ int main(int argc, char* argv[])
         }
         
     }
-    while(( direntptr=readdir(origin) ) != NULL )
-    {
-        printf("inode %d of the  entry %s \n", (int)direntptr->d_ino , direntptr->d_name);
-        printf(" ---------------------------------\n");
-        stat(direntptr->d_name, &buf);
-        printf("Time/Date: %s",ctime(&buf.st_atime));
-        printf(" ---------------------------------\n");
-        printf("entity name: %s \n",direntptr->d_name);
-        printf("accessed: %s", ctime(&buf.st_atime)+4);
-        printf("modified: %s  \n", ctime(&buf.st_mtime));
-    }
+    stat(direntptr->d_name, &buf);
+    search_and_compare(origin, destination, direntptr, buf);
+
     closedir(origin);
     closedir(destination);
 
