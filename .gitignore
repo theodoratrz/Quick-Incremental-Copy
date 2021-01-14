@@ -1,6 +1,6 @@
 # Prerequisites
 *.d
-
+*quic
 # Object files
 *.o
 *.ko
