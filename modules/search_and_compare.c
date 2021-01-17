@@ -5,53 +5,68 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include "search_and_compare.h"
 #include "is_dir.h"
+#define  SIZE 		30
+#define  PERM 		0644
+char *modes[]={"---","--x","-w-","-wx","r--","r-x","rw-","rwx"}; 
 
-int search_and_compare(DIR* org, DIR* dest, struct dirent * dirent_org, struct stat buf_org, struct dirent* dirent_des, struct stat buf_des)
-{
-    while(( dirent_org=readdir(org) ) != NULL )
-    {
-        printf("######");
-        /*if (is_dir(dirent_des->d_name)) 
-        {
-            printf("Directory %s exists.\n", dirent_des->d_name);
-            continue;
-        }
-        else 
-        {
-            printf("Directory %s does not exist.\n", dirent_des->d_name);
-        }*/
+int mycopyfile(char *name1, char *name2, int BUFFSIZE){
+	int infile, outfile;
+	ssize_t nread;
+	char buffer[BUFFSIZE];
+	
+	if ( (infile=open(name1,O_RDONLY)) == -1 )
+		return(-1);
 
-        printf("inode %d of the  entry %s \n", (int)dirent_org->d_ino , dirent_org->d_name);
-        printf(" ---------------------------------\n");
-        printf("Time/Date: %s",ctime(&buf_org.st_atime));
-        printf(" ---------------------------------\n");
-        printf("entity name: %s \n",dirent_org->d_name);
-        printf("accessed: %s", ctime(&buf_org.st_atime)+4);
-        printf("modified: %s  \n", ctime(&buf_org.st_mtime));
-        printf("TYPE: %d \n", dirent_org->d_type);
+	if ( (outfile=open(name2, O_WRONLY|O_CREAT|O_TRUNC, PERM)) == -1){
+		close(infile);
+		return(-2);
+		}
 
-    }
-    while(( dirent_des=readdir(dest) ) != NULL )
-    {
-        /*if (is_dir(dirent_des->d_name)) 
-        {
-            printf("Directory %s exists.\n", dirent_des->d_name);
-            continue;
-        }
-        else 
-        {
-            printf("Directory %s does not exist.\n", dirent_des->d_name);
-        }*/
+	while ( (nread=read(infile, buffer, BUFFSIZE) ) > 0 ){
+		if ( write(outfile,buffer,nread) < nread ){
+			close(infile); close(outfile); return(-3);
+			}
+		}
+	close(infile); close(outfile);
 
-        printf("inode %d of the  entry %s \n", (int)dirent_des->d_ino , dirent_des->d_name);
-        printf(" ---------------------------------\n");
-        printf("Time/Date: %s",ctime(&buf_des.st_atime));
-        printf(" ---------------------------------\n");
-        printf("entity name: %s \n",dirent_des->d_name);
-        printf("accessed: %s", ctime(&buf_des.st_atime)+4);
-        printf("modified: %s  \n", ctime(&buf_des.st_mtime));
-    }
-    return 1;
+	if (nread == -1 ) return(-4);
+	else	return(0);
+}
+
+void list(DIR* dp, struct dirent *dir){
+    char *newname;
+
+	while ((dir = readdir(dp)) != NULL ) {
+  		if (dir->d_ino == 0 ) continue;
+  		
+  		}
+
+}
+
+void printout(char *name){
+    struct stat 	mybuf;
+    char 		type, perms[10];
+    int 		i,j;
+
+	stat(name, &mybuf);
+	switch (mybuf.st_mode & S_IFMT){
+  	case S_IFREG: type = '-'; break;
+  	case S_IFDIR: type = 'd'; break;
+  	default:      type = '?'; break;
+  	}
+
+	*perms='\0';
+
+	for(i=2; i>=0; i--){
+   		j = (mybuf.st_mode >> (i*3)) & 07;
+   		strcat(perms,modes[j]); 
+		}
+
+	printf("%c%s%3d %5d/%-5d %7d %.12s %s \n", \
+                type, perms, (int)mybuf.st_nlink, mybuf.st_uid, \
+                mybuf.st_gid, (int)mybuf.st_size, \
+                ctime(&mybuf.st_mtime)+4, name); /* try without 4 */
 }

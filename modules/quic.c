@@ -60,10 +60,28 @@ int main(int argc, char* argv[])
         }
         
     }
-    stat(dirent_org->d_name, &buf_org);
-    stat(dirent_des->d_name, &buf_des);
-    printf("!!!!!!");
-    search_and_compare(origin, destination, dirent_org, buf_org, dirent_des, buf_des);
+    stat(argv[argc-2], &buf_org);
+    stat(argv[argc-1], &buf_des);
+    
+    //search_and_compare(origin, destination, dirent_org, buf_org, dirent_des, buf_des);
+
+    if ((buf_org.st_mode & S_IFMT) == S_IFDIR )
+    {
+        list(argv[argc-2]);      /* directory encountered */
+    }
+    else 
+    {
+        printout(argv[argc-2]);  /* file encountered */    
+    }	
+
+    if ((buf_des.st_mode & S_IFMT) == S_IFDIR )
+    {
+        list(argv[argc-1]);      /* directory encountered */
+    }
+    else
+    {
+        printout(argv[argc-1]);  /* file encountered      */
+    }	
 
     closedir(origin);
     closedir(destination);
