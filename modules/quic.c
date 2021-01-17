@@ -5,14 +5,14 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "search.h"
+#include "search_and_compare.h"
 
 int main(int argc, char* argv[])
 {
     int verbose = 0, lnk = 0, del = 0, dest;
     DIR *origin, *destination;
-    struct dirent *direntptr;
-    struct stat buf;
+    struct dirent *dirent_org, *dirent_des;
+    struct stat buf_org, buf_des;
 
     if(argc < 3)
     {
@@ -60,8 +60,10 @@ int main(int argc, char* argv[])
         }
         
     }
-    stat(direntptr->d_name, &buf);
-    search_and_compare(origin, destination, direntptr, buf);
+    stat(dirent_org->d_name, &buf_org);
+    stat(dirent_des->d_name, &buf_des);
+    printf("!!!!!!");
+    search_and_compare(origin, destination, dirent_org, buf_org, dirent_des, buf_des);
 
     closedir(origin);
     closedir(destination);
