@@ -1,11 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <dirent.h>
-#include <time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include "search_and_compare.h"
+#include "functions.h"
+#include "is_directory.h"
 
 int main(int argc, char* argv[])
 {
@@ -62,27 +56,21 @@ int main(int argc, char* argv[])
     }
     stat(argv[argc-2], &buf_org);
     stat(argv[argc-1], &buf_des);
-    
-    //search_and_compare(origin, destination, dirent_org, buf_org, dirent_des, buf_des);
 
-    if ((buf_org.st_mode & S_IFMT) == S_IFDIR )
+    int flag = copy_directory();
+    if(flag == -1)
     {
-        list(argv[argc-2]);      /* directory encountered */
+        printf("error copying files\n");
     }
-    else 
+    else if(flag == 0)
     {
-        printout(argv[argc-2]);  /* file encountered */    
-    }	
-
-    if ((buf_des.st_mode & S_IFMT) == S_IFDIR )
-    {
-        list(argv[argc-1]);      /* directory encountered */
+        printf("Directories are the same, no need for copying\n");
     }
     else
     {
-        printout(argv[argc-1]);  /* file encountered      */
-    }	
-
+        printf("Copied Succesfully\n");
+    }
+    
     closedir(origin);
     closedir(destination);
 

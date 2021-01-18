@@ -1,14 +1,13 @@
-#ifndef IS_DIRH
-#define IS_DIRH
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
 #include <time.h>
 #include <sys/types.h>
-#include <sys/stat.h>
+#include "is_directory.h"
 
-int is_dir(char* file);
+int search_inode();
 
-#endif 
+int copy_files();
+
+int copy_directory();
