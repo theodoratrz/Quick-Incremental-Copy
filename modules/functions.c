@@ -144,7 +144,39 @@ int compare_files(char* dest,char* source)
     return 1;   
 }
 
-int compare_directories(char* dest,char* source)
+int compare_directories(DIR* destination,DIR* origin)
 {
-    //anadromi
+    struct dirent* dirent_org, *dirent_dest;
+
+    while(dirent_org = readdir(origin))
+    {
+        while(dirent_dest = readdir(destination))
+        {
+
+        }
+    }
+
+}
+
+void RecDir(char *path, int flag) {
+    DIR *dp = opendir(path);
+    if(!dp) {
+        perror(path);
+        return;
+    }
+    struct dirent *ep;
+    char newdir[512];
+    //printf(BLUE "\n%s :\n" WHITE, path);
+    while((ep = readdir(dp)))
+        if(strncmp(ep->d_name, ".", 1))
+            //printf(GREEN "\t%s\n" WHITE, ep->d_name);
+    closedir(dp);
+    dp = opendir(path);
+    while((ep = readdir(dp))) if(strncmp(ep->d_name, ".", 1)) {
+        if(flag && ep->d_type == 4) {
+            sprintf(newdir, "%s/%s", path, ep->d_name);
+            RecDir(newdir, 1);
+        }
+    }
+    closedir(dp);
 }

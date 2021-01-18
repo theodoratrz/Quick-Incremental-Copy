@@ -19,4 +19,4 @@ int compare_inodes(char* , char*);
 
 int compare_files(char* , char*);
 
-int compare_directories(char* , char*);
+int compare_directories(DIR* , DIR*);
