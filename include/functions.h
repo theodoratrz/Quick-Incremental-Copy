@@ -10,4 +10,4 @@ int search_inode();
 
 int copy_files();
 
-int copy_directory();
+int copy_directory(char* dest, char* source);
