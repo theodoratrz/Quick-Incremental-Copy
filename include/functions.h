@@ -4,10 +4,19 @@
 #include <dirent.h>
 #include <time.h>
 #include <sys/types.h>
+#include <fcntl.h>
 #include "is_directory.h"
+#define  PERM 		0644
+#define SIZE 256
 
-int search_inode();
+char* search_dest_directory(char* , struct dirent*);
 
-int copy_files();
+int copy_files(char* , char*, int);
 
 int copy_directory(char* dest, char* source);
+
+int compare_inodes(char* , char*);
+
+int compare_files(char* , char*);
+
+int compare_directories(char* , char*);
