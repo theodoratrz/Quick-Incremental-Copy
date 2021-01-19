@@ -53,9 +53,9 @@ int copy_directory(char* dest, char* source)
     //int i = 0;
     int flag = 0;
     int not_same = 0;
+    char* name, *old;
     while( (dirent_org = readdir(origin)) )
     {
-        printf("org name: %s\n", dirent_org->d_name);
         if(!(strcmp(dirent_org->d_name, ".")))
         {
             continue;
@@ -64,6 +64,13 @@ int copy_directory(char* dest, char* source)
         {
             continue;
         }
+
+        old = malloc(strlen(source)+strlen(dirent_org->d_name)+2);
+        name = malloc(strlen(dest)+strlen(dirent_org->d_name) + 2);
+        strcpy(old, source);
+        strcat(old, "/");
+        strcat(old, dirent_org->d_name);
+        
         not_same = 0;
         flag = 0;
 
@@ -77,33 +84,31 @@ int copy_directory(char* dest, char* source)
             {
                 continue;
             }
-            int c = compare_files(dirent_des->d_name, dirent_org->d_name);
-            if(c)
+
+            strcpy(name,dest);
+            strcat(name,"/");
+            strcat(name, dirent_org->d_name);
+
+            if( !(strcmp(dirent_org->d_name, dirent_des->d_name)) )
             {
-                printf("COMPARED: %d\n", c);
-                continue;
-            }
-            else
-            {
-                flag = 1;
+                int c = compare_files(name, old);
+                if(!c)
+                {
+                    flag = 1;
+                }
             }
             
         }
         if(flag == 0)
         {
             not_same = 1;
-            char* name = malloc(strlen(dest)+strlen(dirent_org->d_name) + 2);
-            //strcpy(name, dirent_org->d_name);
-            //newname=(char *)malloc(strlen(name)+strlen(dir->d_name)+2);
-            strcpy(name,dest);
-            strcat(name,"/");
-            strcat(name, dirent_org->d_name);
-            printf("name: %s\n", name);
-            printf("org name: %s\n", dirent_org->d_name);
             create_file(name);
-            copy_files(name, dirent_org->d_name, 256);
-            free(name);
+            copy_files(name, old, 256);
         }
+        free(old);
+        free(name);
+        closedir(destination);
+        destination = opendir(dest);
     }
 
     closedir(origin);
@@ -154,10 +159,8 @@ int copy_files(char* dest, char* source, int BUFFSIZE)
 		return(-2);
 		}
 
-    
 	while ( (nread=read(infile, buffer, BUFFSIZE) ) > 0 )
     {
-        printf("#######\n");
 		if ( write(outfile,buffer,nread) < nread )
         {
 			close(infile); 
@@ -205,21 +208,16 @@ int compare_files(char* dest,char* source)
     stat(dest, &buf_des);
     stat(source, &buf_org);
 
-    if(strcmp(dest, source))
+    if( (buf_des.st_size) == (buf_org.st_size) )
     {
-        return 1;
-    }
-    if(buf_des.st_size == buf_org.st_size)
-    {
-        if(difftime(buf_des.st_mtime , buf_org.st_mtime) > 0)   // source time 
+        printf("dest modified   : %s", ctime(&buf_des.st_mtime));
+        printf("source modified   : %s", ctime(&buf_org.st_mtime));
+        if( (difftime(buf_des.st_mtime , buf_org.st_mtime)) > 0.0)   // source time 
         {
             return 0;
         }
-        else
-        {
-            return 1;
-        }
-        
+
+        return 1;
     }
     
     return 1;   
