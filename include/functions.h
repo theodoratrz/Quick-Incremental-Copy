@@ -23,3 +23,5 @@ int compare_files(char* , char*);
 int compare_directories(DIR* , DIR*);
 
 int create_file(char*);
+
+int create_directory(char*);

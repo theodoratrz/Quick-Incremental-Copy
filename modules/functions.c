@@ -38,16 +38,7 @@ int copy_directory(char* dest, char* source)
     destination = opendir(dest);
     if(destination == NULL)
     {
-        dest = mkdir(dest, 0777);
-        if(dest == -1)
-        {
-            perror("Directory not created");
-            return -1;
-        }
-        else
-        {
-            printf("Directory created!\n");
-        }
+        
         
     }
     stat(source, &buf_org);
@@ -65,13 +56,27 @@ int create_file(char* name)
 {
     int fd;
 	
-	if ( (fd=open(name, O_CREAT|O_RDWR, PERM)) == -1){
-		perror("creating");
-		exit(1);
-		}
-	else 	{ 
-		printf("Managed to get to the file successfully\n"); 
-		}
+	if ( (fd=open(name, O_CREAT|O_RDWR, PERM)) == -1)
+    {
+		return -1;
+	}
+	else 	
+    { 
+		return 0; 
+	}
+}
+
+int create_directory(char* name)
+{
+    int dp = mkdir(name, 0777);
+    if(dp == -1)
+    {
+        return -1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 int copy_files(char* dest, char* source, int BUFFSIZE)
