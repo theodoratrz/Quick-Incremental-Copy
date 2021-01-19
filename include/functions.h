@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include "is_directory.h"
 #define  PERM 		0644
 #define SIZE 256

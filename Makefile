@@ -9,11 +9,11 @@ CC = gcc
 CFLAGS = -Wall -g -I$(INCLUDE)
 
 # Αρχεία .o
-OBJS_S = $(MODULES)/is_dir.o
-OBJS =  $(MODULES)/quic.o $(MODULES)/search_and_compare.o 
+
+OBJS =  $(MODULES)/quic.o $(MODULES)/is_directory.o $(MODULES)/functions.o
 
 # Το εκτελέσιμο πρόγραμμα
 EXEC = quic
 
-$(EXEC): $(OBJS) $(OBJS_S)
-	$(CC) $(OBJS) $(OBJS_S) -o $(EXEC) 
+$(EXEC): $(OBJS) 
+	$(CC) $(OBJS) -o $(EXEC) 

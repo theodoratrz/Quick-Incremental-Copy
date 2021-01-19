@@ -29,27 +29,81 @@ int copy_directory(char* dest, char* source)
     DIR *origin, *destination;
     struct dirent *dirent_org, *dirent_des;
     struct stat buf_org, buf_des;
-    char* newname;
 
     origin = opendir(source);
     if(origin == NULL)
     {
-
+        perror("Opening directory");
+        exit(1);
+    }
     destination = opendir(dest);
     if(destination == NULL)
     {
-        
+        if(!(create_directory(dest)))
+        {
+            perror("Creating directory");
+            exit(1);
+        }
         
     }
+    
     stat(source, &buf_org);
     stat(dest, &buf_des);
 
-
+    //int i = 0;
+    int flag = 0;
+    int not_same = 0;
+    while( (dirent_org = readdir(origin)) )
+    {
+        printf("org name: %s\n", dirent_org->d_name);
+        if(!(strcmp(dirent_org->d_name, ".")))
+        {
+            continue;
+        }
+        flag = 0;
+        while( (dirent_des = readdir(destination)) ) 
+        {
+            if(!(strcmp(dirent_des->d_name, ".")))
+            {
+                continue;
+            }
+            int c = compare_files(dirent_des->d_name, dirent_org->d_name);
+            if(c)
+            {
+                printf("comparison: %d flag: %d\n", c, flag);
+                //continue;
+            }
+            else
+            {
+                flag = 1;
+                printf("flag: %d\n", flag);
+                //break;
+            }
+            if(flag == 0)
+            {
+                not_same = 1;
+                char* name = malloc(strlen(dest)+strlen(dirent_org->d_name) + 2);
+                //strcpy(name, dirent_org->d_name);
+                //newname=(char *)malloc(strlen(name)+strlen(dir->d_name)+2);
+                strcpy(name,dest);
+                strcat(name,"/");
+                strcat(name, dirent_org->d_name);
+                printf("name: %s\n", name);
+                printf("org name: %s\n", dirent_org->d_name);
+                create_file(name);
+                copy_files(name, dirent_org->d_name, 256);
+                break;
+            }
+        }
+    }
 
     closedir(origin);
     closedir(destination);
+    if(not_same)
+    {
+        return 1;
+    }
     return 0;
-}
 }
 
 int create_file(char* name)
@@ -104,7 +158,7 @@ int copy_files(char* dest, char* source, int BUFFSIZE)
 	else	return(0);
 } 
 
-int compare_inodes(char* dest,char* source)
+/*int compare_inodes(char* dest,char* source)
 {
     if(is_directory(dest) && is_directory(source))
     {
@@ -128,7 +182,7 @@ int compare_inodes(char* dest,char* source)
     }
     
 }
-
+*/
 int compare_files(char* dest,char* source)
 {
     struct stat buf_org, buf_des;
@@ -169,7 +223,7 @@ int compare_files(char* dest,char* source)
 
 }*/
 
-void RecDir(char *path, int flag) {
+/*void RecDir(char *path, int flag) {
     DIR *dp = opendir(path);
     if(!dp) {
         perror(path);
@@ -190,4 +244,4 @@ void RecDir(char *path, int flag) {
         }
     }
     closedir(dp);
-}
+}*/
