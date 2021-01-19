@@ -1,6 +1,6 @@
 #include "functions.h"
 
-char* search_dest_directory(char* name, struct dirent* dirent_dest)
+/*char* search_dest_directory(char* name, struct dirent* dirent_dest)
 {
     char* newname;
     while ((dirent_dest = readdir(name)) != NULL )
@@ -21,7 +21,7 @@ char* search_dest_directory(char* name, struct dirent* dirent_dest)
         }
         
     }
-}
+}*/
 
 
 int copy_directory(char* dest, char* source)
@@ -53,23 +53,25 @@ int copy_directory(char* dest, char* source)
     stat(source, &buf_org);
     stat(dest, &buf_des);
 
-    while ((dirent_org = readdir(origin)) != NULL )
-    {
-        if (dirent_org->d_ino == 0 ) continue;
 
-        newname=(char *)malloc(strlen(source)+strlen(dirent_org->d_name)+2);
-  		strcpy(newname,source);
-  		strcat(newname,"/");
-  		strcat(newname,dirent_org->d_name);
-        
-        
-        free(newname);
-    }
 
     closedir(origin);
     closedir(destination);
     return 0;
 }
+}
+
+int create_file(char* name)
+{
+    int fd;
+	
+	if ( (fd=open(name, O_CREAT|O_RDWR, PERM)) == -1){
+		perror("creating");
+		exit(1);
+		}
+	else 	{ 
+		printf("Managed to get to the file successfully\n"); 
+		}
 }
 
 int copy_files(char* dest, char* source, int BUFFSIZE)
@@ -148,7 +150,7 @@ int compare_files(char* dest,char* source)
     return 1;   
 }
 
-int compare_directories(DIR* destination,DIR* origin)
+/*int compare_directories(DIR* destination,DIR* origin)
 {
     struct dirent* dirent_org, *dirent_dest;
 
@@ -160,7 +162,7 @@ int compare_directories(DIR* destination,DIR* origin)
         }
     }
 
-}
+}*/
 
 void RecDir(char *path, int flag) {
     DIR *dp = opendir(path);

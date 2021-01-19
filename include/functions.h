@@ -9,7 +9,6 @@
 #include "is_directory.h"
 #define  PERM 		0644
 #define SIZE 256
-enum{Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec};
 
 char* search_dest_directory(char* , struct dirent*);
 
@@ -23,3 +22,4 @@ int compare_files(char* , char*);
 
 int compare_directories(DIR* , DIR*);
 
+int create_file(char*);
