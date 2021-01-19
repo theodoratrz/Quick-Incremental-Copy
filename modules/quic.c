@@ -30,7 +30,6 @@ int main(int argc, char* argv[])
         }
     }
     
-    printf("%%%%\n");
     int flag = copy_directory( argv[argc-1], argv[argc-2]);
     if(flag == -1)
     {

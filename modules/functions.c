@@ -60,40 +60,49 @@ int copy_directory(char* dest, char* source)
         {
             continue;
         }
+        if(!(strcmp(dirent_org->d_name, "..")))
+        {
+            continue;
+        }
+        not_same = 0;
         flag = 0;
+
         while( (dirent_des = readdir(destination)) ) 
         {
             if(!(strcmp(dirent_des->d_name, ".")))
             {
                 continue;
             }
+            if(!(strcmp(dirent_org->d_name, "..")))
+            {
+                continue;
+            }
             int c = compare_files(dirent_des->d_name, dirent_org->d_name);
             if(c)
             {
-                printf("comparison: %d flag: %d\n", c, flag);
-                //continue;
+                printf("COMPARED: %d\n", c);
+                continue;
             }
             else
             {
                 flag = 1;
-                printf("flag: %d\n", flag);
-                //break;
             }
-            if(flag == 0)
-            {
-                not_same = 1;
-                char* name = malloc(strlen(dest)+strlen(dirent_org->d_name) + 2);
-                //strcpy(name, dirent_org->d_name);
-                //newname=(char *)malloc(strlen(name)+strlen(dir->d_name)+2);
-                strcpy(name,dest);
-                strcat(name,"/");
-                strcat(name, dirent_org->d_name);
-                printf("name: %s\n", name);
-                printf("org name: %s\n", dirent_org->d_name);
-                create_file(name);
-                copy_files(name, dirent_org->d_name, 256);
-                break;
-            }
+            
+        }
+        if(flag == 0)
+        {
+            not_same = 1;
+            char* name = malloc(strlen(dest)+strlen(dirent_org->d_name) + 2);
+            //strcpy(name, dirent_org->d_name);
+            //newname=(char *)malloc(strlen(name)+strlen(dir->d_name)+2);
+            strcpy(name,dest);
+            strcat(name,"/");
+            strcat(name, dirent_org->d_name);
+            printf("name: %s\n", name);
+            printf("org name: %s\n", dirent_org->d_name);
+            create_file(name);
+            copy_files(name, dirent_org->d_name, 256);
+            free(name);
         }
     }
 
@@ -114,10 +123,8 @@ int create_file(char* name)
     {
 		return -1;
 	}
-	else 	
-    { 
-		return 0; 
-	}
+	
+	return 0; 
 }
 
 int create_directory(char* name)
@@ -147,15 +154,24 @@ int copy_files(char* dest, char* source, int BUFFSIZE)
 		return(-2);
 		}
 
-	while ( (nread=read(infile, buffer, BUFFSIZE) ) > 0 ){
-		if ( write(outfile,buffer,nread) < nread ){
-			close(infile); close(outfile); return(-3);
-			}
+    
+	while ( (nread=read(infile, buffer, BUFFSIZE) ) > 0 )
+    {
+        printf("#######\n");
+		if ( write(outfile,buffer,nread) < nread )
+        {
+			close(infile); 
+            close(outfile); 
+            return(-3);
 		}
-	close(infile); close(outfile);
+	}
+	close(infile); 
+    close(outfile);
 
-	if (nread == -1 ) return(-4);
-	else	return(0);
+	if (nread == -1 ) 
+        return(-4);
+	else	
+        return(0);
 } 
 
 /*int compare_inodes(char* dest,char* source)
