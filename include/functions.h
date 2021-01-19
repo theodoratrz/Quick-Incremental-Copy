@@ -3,11 +3,13 @@
 #include <string.h>
 #include <dirent.h>
 #include <time.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include "is_directory.h"
 #define  PERM 		0644
 #define SIZE 256
+enum{Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec};
 
 char* search_dest_directory(char* , struct dirent*);
 
@@ -20,3 +22,4 @@ int compare_inodes(char* , char*);
 int compare_files(char* , char*);
 
 int compare_directories(DIR* , DIR*);
+

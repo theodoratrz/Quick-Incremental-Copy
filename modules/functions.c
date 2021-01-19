@@ -128,9 +128,13 @@ int compare_files(char* dest,char* source)
     stat(dest, &buf_des);
     stat(source, &buf_org);
 
+    if(strcmp(dest, source))
+    {
+        return 1;
+    }
     if(buf_des.st_size == buf_org.st_size)
     {
-        if( strcmp(ctime(&buf_des.st_mtim), ctime(&buf_org.st_mtim)) > 0)
+        if(difftime(buf_des.st_mtime , buf_org.st_mtime) > 0)   // source time 
         {
             return 0;
         }
