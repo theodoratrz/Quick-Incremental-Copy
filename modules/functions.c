@@ -6,14 +6,12 @@
     while ((dirent_dest = readdir(name)) != NULL )
     {
         if (dirent_dest->d_ino == 0 ) continue;
-
         newname=(char *)malloc(strlen(name)+strlen(dirent_dest->d_name)+2);
   		strcpy(newname,name);
   		strcat(newname,"/");
   		strcat(newname,dirent_dest->d_name);
         if(is_directory(newname))
         {
-
         }
         else
         {
@@ -29,6 +27,8 @@ int copy_directory(char* dest, char* source)
     DIR *origin, *destination;
     struct dirent *dirent_org, *dirent_des;
     struct stat buf_org, buf_des;
+    char* file_names[10];
+    int copy = -1;
 
     origin = opendir(source);
     if(origin == NULL)
@@ -51,8 +51,8 @@ int copy_directory(char* dest, char* source)
     stat(dest, &buf_des);
 
     //int i = 0;
-    int flag = 0;
-    int not_same = 0;
+    int flag = 0, first = 0;
+    int not_same = 0, sum = 0;
     char* name, *old;
     while( (dirent_org = readdir(origin)) )
     {
@@ -76,6 +76,14 @@ int copy_directory(char* dest, char* source)
 
         while( (dirent_des = readdir(destination)) ) 
         {
+            copy++;
+            if(first == 0)
+            {
+                file_names[copy] = malloc(strlen(dirent_des->d_name)+1);
+                strcpy(file_names[copy] , dirent_des->d_name);
+                sum++;
+            }
+            
             if(!(strcmp(dirent_des->d_name, ".")))
             {
                 continue;
@@ -94,6 +102,7 @@ int copy_directory(char* dest, char* source)
                 int c = compare_files(name, old);
                 if(!c)
                 {
+                    strcpy(file_names[copy], " ");
                     flag = 1;
                 }
             }
@@ -105,14 +114,48 @@ int copy_directory(char* dest, char* source)
             create_file(name);
             copy_files(name, old, 256);
         }
+        copy = -1;
+        first = 1;
         free(old);
         free(name);
         closedir(destination);
         destination = opendir(dest);
     }
 
+    
     closedir(origin);
     closedir(destination);
+
+    for(int i = 0; i < sum; i++)
+    {
+        if( !(strcmp(file_names[i], ".")))
+        {
+            continue;
+        }
+        else if( !(strcmp(file_names[i], "..")))
+        {
+            continue;
+        }
+        else if( !(strcmp(file_names[i], " ")))
+        {
+            continue;
+        }
+        else
+        {
+            name = malloc(strlen(dest)+strlen(file_names[i]) + 2);
+            strcpy(name, dest);
+            strcat(name, "/");
+            strcat(name, file_names[i]);
+            remove(name);
+            free(name);
+        }
+        
+    }
+    for(int i = 0; i < sum; i++)
+    {
+        free(file_names[i]);
+    }
+
     if(not_same)
     {
         return 1;
@@ -226,15 +269,12 @@ int compare_files(char* dest,char* source)
 /*int compare_directories(DIR* destination,DIR* origin)
 {
     struct dirent* dirent_org, *dirent_dest;
-
     while(dirent_org = readdir(origin))
     {
         while(dirent_dest = readdir(destination))
         {
-
         }
     }
-
 }*/
 
 /*void RecDir(char *path, int flag) {
