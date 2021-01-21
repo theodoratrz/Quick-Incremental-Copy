@@ -18,7 +18,9 @@ int copy_directory(char* dest, char* source)
     destination = opendir(dest);
     if(destination == NULL)
     {
-        if(!(create_directory(dest)))
+        int f = create_directory(dest);
+        destination = opendir(dest);
+        if(f == -1)
         {
             perror("Creating directory");
             exit(1);
@@ -88,8 +90,12 @@ int copy_directory(char* dest, char* source)
                 }
                 else if(n == 0)
                 {
-                    strcpy(file_names[copy], " ");
-                    flag = 1;
+                    if(copy < sum)
+                    {
+                        strcpy(file_names[copy], " ");
+                        flag = 1;
+                    }
+                    
                 }   
             }
             else if( (is_file(name)) && (is_file(old)))
@@ -150,7 +156,6 @@ int copy_directory(char* dest, char* source)
             strcat(name, file_names[i]);
             if(is_directory(name))
             {
-                printf("########### %s\n", name);
                 remove_directory(name);
             }
             else
