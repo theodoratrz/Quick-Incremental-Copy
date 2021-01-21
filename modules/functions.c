@@ -1,26 +1,5 @@
 #include "functions.h"
 
-/*char* search_dest_directory(char* name, struct dirent* dirent_dest)
-{
-    char* newname;
-    while ((dirent_dest = readdir(name)) != NULL )
-    {
-        if (dirent_dest->d_ino == 0 ) continue;
-        newname=(char *)malloc(strlen(name)+strlen(dirent_dest->d_name)+2);
-  		strcpy(newname,name);
-  		strcat(newname,"/");
-  		strcat(newname,dirent_dest->d_name);
-        if(is_directory(newname))
-        {
-        }
-        else
-        {
-            
-        }
-        
-    }
-}*/
-
 
 int copy_directory(char* dest, char* source)
 {
@@ -28,7 +7,7 @@ int copy_directory(char* dest, char* source)
     struct dirent *dirent_org, *dirent_des;
     struct stat buf_org, buf_des;
     char* file_names[10];
-    int copy = -1;
+    int copy = -1, source_has_dir = 0, dest_has_dir = 0;
 
     origin = opendir(source);
     if(origin == NULL)
@@ -50,7 +29,6 @@ int copy_directory(char* dest, char* source)
     stat(source, &buf_org);
     stat(dest, &buf_des);
 
-    //int i = 0;
     int flag = 0, first = 0;
     int not_same = 0, sum = 0;
     char* name, *old;
@@ -97,14 +75,32 @@ int copy_directory(char* dest, char* source)
             strcat(name,"/");
             strcat(name, dirent_org->d_name);
 
-            if( !(strcmp(dirent_org->d_name, dirent_des->d_name)) )
+            source_has_dir = is_directory(old);
+            dest_has_dir = is_directory(name);
+
+            if( (source_has_dir) && (dest_has_dir) )
             {
-                int c = compare_files(name, old);
-                if(!c)
+                if( (copy_directory(name, old)) == -1)
                 {
-                    strcpy(file_names[copy], " ");
-                    flag = 1;
+                    perror("copying sub-directory");
+                    exit(1);
                 }
+            }
+            else if( (is_file(name)) && (is_file(old)))
+            {
+                if( !(strcmp(dirent_org->d_name, dirent_des->d_name)) )
+                {
+                    int c = compare_files(name, old);
+                    if(!c)
+                    {
+                        strcpy(file_names[copy], " ");
+                        flag = 1;
+                    }
+                }
+            }
+            else
+            {
+                continue;
             }
             
         }
