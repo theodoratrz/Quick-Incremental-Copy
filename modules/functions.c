@@ -80,11 +80,17 @@ int copy_directory(char* dest, char* source)
 
             if( (source_has_dir) && (dest_has_dir) )
             {
-                if( (copy_directory(name, old)) == -1)
+                int n = copy_directory(name, old);
+                if( n == -1)
                 {
                     perror("copying sub-directory");
                     exit(1);
                 }
+                else if(n == 0)
+                {
+                    strcpy(file_names[copy], " ");
+                    flag = 1;
+                }   
             }
             else if( (is_file(name)) && (is_file(old)))
             {
@@ -142,7 +148,16 @@ int copy_directory(char* dest, char* source)
             strcpy(name, dest);
             strcat(name, "/");
             strcat(name, file_names[i]);
-            remove(name);
+            if(is_directory(name))
+            {
+                printf("########### %s\n", name);
+                remove_directory(name);
+            }
+            else
+            {
+                remove(name);
+            }
+            
             free(name);
         }
         
@@ -168,6 +183,7 @@ int create_file(char* name)
 		return -1;
 	}
 	
+    printf("File created: %s\n", name);
 	return 0; 
 }
 
@@ -180,6 +196,7 @@ int create_directory(char* name)
     }
     else
     {
+        printf("Directory created : %s\n", name);
         return 0;
     }
 }
@@ -213,34 +230,61 @@ int copy_files(char* dest, char* source, int BUFFSIZE)
 	if (nread == -1 ) 
         return(-4);
 	else	
+    {
+        printf("File copied: %s\n", dest);
         return(0);
+    }
+        
 } 
 
-/*int compare_inodes(char* dest,char* source)
-{
-    if(is_directory(dest) && is_directory(source))
-    {
-        compare_directories(dest, source);
-    }
-    else if(is_file(dest) && is_file(source))
-    {
-        if(compare_files(dest, source))
-        {
-            copy_files(dest, source, SIZE);
-        }
-        else
-        {
-            return 0;   // same files , no copy
-        }
-        
-    }
-    else
-    {
-        return 1;       // dir and file
-    }
-    
+int remove_directory(char *path) {
+   DIR *d = opendir(path);
+   size_t path_len = strlen(path);
+   int r = -1;
+
+   if (d) {
+      struct dirent *p;
+
+      r = 0;
+      while (!r && (p=readdir(d))) {
+          int r2 = -1;
+          char *buf;
+          size_t len;
+
+          /* Skip the names "." and ".." as we don't want to recurse on them. */
+          if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
+             continue;
+
+          len = path_len + strlen(p->d_name) + 2; 
+          buf = malloc(len);
+
+          if (buf) {
+             struct stat statbuf;
+
+             snprintf(buf, len, "%s/%s", path, p->d_name);
+             if (!stat(buf, &statbuf)) {
+                if (S_ISDIR(statbuf.st_mode))
+                   r2 = remove_directory(buf);
+                else
+                   r2 = unlink(buf);
+             }
+             free(buf);
+          }
+          r = r2;
+      }
+      closedir(d);
+   }
+
+   if (!r)
+   {
+       r = rmdir(path);
+       printf("Directory removed: %s\n", path);
+   }
+      
+
+   return r;
 }
-*/
+
 int compare_files(char* dest,char* source)
 {
     struct stat buf_org, buf_des;
@@ -249,8 +293,6 @@ int compare_files(char* dest,char* source)
 
     if( (buf_des.st_size) == (buf_org.st_size) )
     {
-        printf("dest modified   : %s", ctime(&buf_des.st_mtime));
-        printf("source modified   : %s", ctime(&buf_org.st_mtime));
         if( (difftime(buf_des.st_mtime , buf_org.st_mtime)) > 0.0)   // source time 
         {
             return 0;
@@ -261,17 +303,6 @@ int compare_files(char* dest,char* source)
     
     return 1;   
 }
-
-/*int compare_directories(DIR* destination,DIR* origin)
-{
-    struct dirent* dirent_org, *dirent_dest;
-    while(dirent_org = readdir(origin))
-    {
-        while(dirent_dest = readdir(destination))
-        {
-        }
-    }
-}*/
 
 /*void RecDir(char *path, int flag) {
     DIR *dp = opendir(path);
