@@ -1,181 +1,249 @@
+///////////////////////////////////////////////////////////
+//
+// Υλοποίηση του ADT BList μέσω διπλά συνδεδεμένης λίστας.
+//
+///////////////////////////////////////////////////////////
+
+#include <stdlib.h>
+
 #include "List.h"
 
-struct list
+int compare(Pointer p1, Pointer p2)
 {
-    LNode dummy;            // we use an empty node to initialize the list
-    LNode last;             // keep the last node of the list
-    int size;               // size of the list
+    return strcmp(p1,p2);
+}
+
+// Ενα BList είναι pointer σε αυτό το struct
+
+struct blist {
+	BListNode dummy;				// χρησιμοποιούμε dummy κόμβο, ώστε ακόμα και η κενή λίστα να έχει έναν κόμβο.
+	BListNode last;					// δείκτης στον τελευταίο κόμβο, ή στον dummy (αν η λίστα είναι κενή)
+	int size;						// μέγεθος, ώστε η list_size να είναι Ο(1)
 };
 
-struct list_node            // a list node contains a value(of any type) and a pointer
-{                           // to the next node
-    LNode next;
-    ptr value;
+struct blist_node {
+	BListNode next;					// Δείκτης στον επόμενο
+	BListNode prev;					// Δείκτης στον προηγούμενο	
+	Pointer value;					// Η τιμή που αποθηκεύουμε στον κόμβο
 };
 
-List list_create()
+BList blist_create() 
 {
-    List l = malloc(sizeof(*l));    // create the list
-    if(l == NULL)                   // check if the memory was successfully allocated
-    {
-        printf("Memory not allocated\n");
-        exit(1);
-    }
-    l->size = 0;                                // initialize the size
-    l->dummy = malloc(sizeof( (*l->dummy)) );   // create the dummy node
-    if(l->dummy == NULL)
-    {
-        printf("Memory not allocated\n");
-        exit(1);
-    }
-
-    l->dummy->next = NULL;                      // list is empty so, dummy's next is NULL
-    l->last = l->dummy;                         // and the last node is also dummy
-
-    return l;
+	BList blist = malloc(sizeof(*blist));			// δημιουργούμε το struct
+	blist->size = 0;								// αρχικοποιούμε τις μεταβλητές
+	blist->dummy = malloc(sizeof(*blist->dummy));	// φτιάχνουμε τον dummy
+	blist->dummy->next = NULL;
+	blist->dummy->prev = NULL;
+	blist->last = blist->dummy;						// εφόσον η λίστα είναι άδεια, ο τελευταίος κόμβος δείχνει στο dummy
+	return blist;
 }
 
-int get_list_size(List l)
+int blist_size(BList blist) 
 {
-    return l->size;
+	return blist->size;
 }
 
-int compare_nodes(LNode n1, LNode n2)           // compare list nodes based on their values
+BListNode blist_insert(BList blist, BListNode node, Pointer value) 
 {
-    return (strcmp(n1->value, n2->value));
-}
-
-void list_insert(List l, LNode node, ptr v)
-{
-    // if node is NULL we just insert after the dummy node
-    if(node == NULL)
-    {
-        node = l->dummy;
-    }
-    
-    LNode NewNode = malloc(sizeof(*NewNode));   // create the new node
-    if(NewNode == NULL)                         // check if the memory was successfully allocated
-    {
-        printf("Memory not allocated\n");
-        exit(1);
-    }
-
-    NewNode->value = v;
-    NewNode->next = node->next;             // connect newnode between the node and node->next
-    node->next = NewNode;       
-    if(l->last == node)                     // if node was the last
-    {
-        l->last = NewNode;                  // then new node will be the last now
-    }
-
-    l->size++;                              // increase the size
-
-}
-
-void list_remove(List l, LNode node)
-{
-    if(l->dummy->next == NULL)              // if list is empty, print a message
-    {
-        printf("List is empty\n");
-    }
-    else 
-    {
-        if(node == NULL)                    // if node is null, delete after dummy
-        {
-            node = l->dummy;
-        }
-
-        LNode toRemove = node->next;        // node to be removed is the next of node
-        if(toRemove != NULL)                // check if it exists
-        {
-            node->next = toRemove->next;    // connect node with toremove's next node
-            if(toRemove == l->last)         // if toRemove node is the last node of the list
-            {   
-                l->last = node;             // now node will be the last node of the list
-            }
-
-            l->size--;                      // decrease size of the list
-
-            free(toRemove);                 // remove 
-        }
-        
-    }
-}
-
-LNode list_first_node(List l)
-{
-    if(get_list_size(l))
-        return l->dummy->next;                 // returns first node after the dummy node
-    return NULL;
-}
-
-LNode list_last_node(List l)               // if the last node of the list is the dummy
-{                                          // then the list is empty, so return NULL
-    if (l->last == l->dummy)
-    {
-		return NULL;		
-    }
-	else
-    {
-        return l->last;
-    }
+	//Εισάγουμε πριν τον node
+	BListNode new = malloc(sizeof(*new));
+	BListNode dummy; 
+	if(node == BLIST_BOF)						// αν ο node δείχνει στην αρχή της λίστας
+	{
+		dummy = blist->dummy;					
+		new->value = value;						
+		new->next = dummy->next;				
+		dummy->next = new;						// εισάγουμε τον καινούριο κόμβο μετά τον dummy
+		new->prev = dummy;
+		if(blist->size == 0)
+		{
+			blist->last = new;					// αν η λίστα ήταν άδεια, ο τελευταίος κόμβος δείχνει στον κόμβο που προσθέσαμε
+		}
+		else
+		{
+			dummy->next->prev = new;			// αλλιώς μεταξύ του dummy και του πρώτου κόμβου
+		}
 		
-    
+		blist->size++;							// ενημέρωση του size
+	}
+	else if(node == BLIST_EOF)					// αν ο δείκτης δείχνει στο τέλος της λίστας
+	{
+		if(blist->size == 0)					// αν η λίστα είναι άδεια
+		{
+			dummy = blist->dummy;
+			new->value = value;
+			new->next = dummy->next;			// προσθέτουμε τον καινούριο κόμβο μετά τον dummy
+			dummy->next = new;
+			new->prev = dummy;
+			blist->last = new;					// ο τελευταίος κόμβος δείχνει στον κόμβο που προσθέσαμε
+		}
+		else									// αν δεν είναι άδεια
+		{
+			new->value = value;
+			new->prev = blist->last;	
+			blist->last->next = new;			// προσθέτουμε τον καινούριο κόμβο μετά τον τελευταίο κόμβο
+			blist->last = new;					// ο τελευταίος κόμβος δείχνει στον κόμβο που προσθέσαμε
+			new->next = NULL;					// αφού ο καινούριος κόμβος μπήκε στο τέλος, ο επόμενος είναι NULL
+		}
+		
+		blist->size++;							// ενημέρωση του size
+	} 
+	else										// αν η εισαγωγή θα γίνει σε τυχαία θέση μέσα στη λίστα
+	{
+		new->value = value;
+		new->next = node;						// συνδέουμε τον καινούριο κόμβο με τον node
+		new->prev = node->prev;					// συνδέουμε τον καινούριο κόμβο με τον προηγούμενο του node
+		node->prev->next = new;					// προσθέτουμε τον καινούριο κόμβο πριν τον node
+		node->prev = new;						// συνδέουμε τον node με τον καινούριο κόμβο
+		blist->size++;							// ενημέρωση του size
+	}
+	return new;
+	
 }
 
-// returns the next of node
-LNode list_node_next(List l, LNode node)
+void blist_remove(BList blist, BListNode node) 
 {
-    if(node != NULL)                    
-    {
-        return node->next;
-    }
-
-    return NULL;
+	// αφαιρούμε τον node
+	BListNode previous = node->prev;
+	if( previous == NULL)						// αν ο προηγούμενος του node είναι NULL, σημαίνει ότι βρίσκεται στην αρχή της λίστας
+	{
+		previous = blist->dummy;				// άρα ο προηγούμενός του είναι ο dummy
+	}
+	else
+	{
+		previous = node->prev;					// αλλιώς, κρατάμε τον προηγούμενο κόμβο από το node
+	}
+	
+	if( node->next ==NULL)						// αν ο επόμενος του node είναι NULL, σημαίνει ότι βρίσκεται στο τέλος της λίστας 
+	{
+		previous->next = NULL;					// ο προηγούμενος του node θα δείχνει τώρα NULL
+		blist->last = previous;					// ο τελευταίος κόμβος αλλάζει
+	}
+	else										// αλλιώς, συνδέουμε τον προηγούμενο του node με τον επόμενό του node
+	{
+		previous->next = node->next;
+		node->next->prev = node->prev;			// και τον επόμενο του node με τον προηγούμενο του node
+	}
+	
+	/*if(blist->destroy_value != NULL)
+	{
+		blist->destroy_value(node->value);
+	}*/
+	
+	blist->size--;								// ενημέρωση του size
+	free(node);									// διαγράφουμε τον κόμβο
 }
 
-// returns the value of the list node(if it exists)
-ptr list_get_value(List l, LNode node)
+Pointer blist_find(BList blist, Pointer value) 
 {
-    if(node != NULL)
-    {
-        return node->value;
-    }
-
-    return NULL;
+	BListNode node = blist_find_node(blist, value);
+	return node == NULL ? NULL : node->value;
 }
 
-// find the node with value "value"
-LNode list_find(List l, ptr value)
+void blist_destroy(BList blist) 
 {
-    if(l->dummy->next != NULL)       //if list is not empty
-    {                               // iterate all the list 
-        for(LNode node = l->dummy->next; node != NULL; node = node->next)
-        {
-            if( !(strcmp(value, node->value)) )  
-            {
-                return node;                            // we found the node
-            }
-        }
-    }
+	// Διασχίζουμε όλη τη λίστα και κάνουμε free όλους τους κόμβους,
+	// συμπεριλαμβανομένου και του dummy
+	//
+	BListNode node = blist->dummy;
+	while (node != NULL) {			
+		BListNode next = node->next;		// το node->next _πριν_ κάνουμε free
 
-    return NULL;
+		// Καλούμε τη destroy_value, αν υπάρχει 
+		//if (node != blist->dummy && blist->destroy_value != NULL)
+		//	blist->destroy_value(node->value);
+
+		free(node);
+		node = next;
+	}
+
+	// Τέλος free το ίδιο το struct
+	free(blist);
 }
 
-void list_delete(List l)
+BListNode create_node(Pointer value)				// συνάρτηση που δημιοργεί και επιστρέφει ενα blist node
 {
-    LNode node = l->dummy;          // iterate the list
-    LNode next;                     // keep the next node 
-    while(node != NULL)
-    {
-        next = node->next;
-        if(node != l->dummy)    
-        {
-            free(node->value);      // free the content of the node
-        }
-        free(node);                 // free the node
-        node = next;                
-    }
+	BListNode node = malloc(sizeof(*node));
+	node->next = NULL;
+	node->prev = NULL;
+	node->value = value;
+	return node;
+}
 
-    free(l);                        // free the list
+// Διάσχιση της λίστας /////////////////////////////////////////////
+
+BListNode blist_first(BList blist) 
+{
+	// Ο πρώτος κόμβος είναι ο επόμενος του dummy.
+	return blist->dummy->next;
+}
+
+BListNode blist_last(BList blist) 
+{
+	if(blist->last == blist->dummy)					// αν η λίστα είναι κενή το last δείχνει στον dummy
+	{
+		return BLIST_EOF;							// αλλά εμείς επιστρέφουμε EOF
+	}
+	else
+	{
+		return blist->last;
+	}
+}
+
+
+BListNode blist_next(BList blist, BListNode node) 
+{
+	if(node->next == BLIST_EOF)
+	{
+		return BLIST_EOF;
+	}
+
+	return node->next;
+}
+
+BListNode blist_previous(BListNode node) 
+{
+	if(node->next == BLIST_BOF)
+	{
+		return BLIST_BOF;
+	}
+	return node->prev;
+}
+
+Pointer blist_node_value(BList blist, BListNode node) 
+{
+	if(node == NULL)
+	{
+		return NULL;
+	}
+	return node->value;
+}
+
+BListNode blist_find_node(BList blist, Pointer value) 
+{
+	for (BListNode node = blist->dummy->next; node != NULL; node = node->next)
+		if (compare(value, node->value) == 0)									// διάσχιση όλης της λίστας, καλούμε την compare μέχρι να επιστρέψει 0
+			return node;		
+	return NULL;
+}
+
+// συνάρτηση που βρίσκει τον αμέσως επόμενο σε σειρά κόμβο βάσει των values και τον επιστρέφει
+BListNode blist_find_next(BList blist, Pointer value)				
+{
+	int counter = 0;
+	for (BListNode node = blist->dummy->next; node != NULL; node = node->next)
+	{
+		counter++;
+		if (compare(value, node->value) < 0)									// διάσχιση όλης της λίστας, καλούμε την compare μέχρι να επιστρέψει <0
+			return node;															
+	}
+	if(counter == 0)															// αν ο μετρητής είναι 0, η λίστα είναι κενή
+	{
+		return BLIST_BOF;
+	}
+	else																		// αν μπήκε στο loop αλλά δεν βρήκε κατάλληλο node τότε
+	{
+		return BLIST_EOF;														// δεν υπάρχει μεγαλύτερο value στη λίστα
+	}
+	
 }

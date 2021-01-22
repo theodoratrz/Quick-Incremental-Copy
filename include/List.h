@@ -1,47 +1,91 @@
-#ifndef LIST_H
-#define LIST_H
+///////////////////////////////////////////////////////////////////
+//
+// ADT BList
+//
+// Abstract bidirectional λίστα. Παρέχει σειριακή πρόσβαση στα
+// στοιχεία και στις δύο κατευθύνσεις, και προσθήκη/αφαίρεση σε
+// οποιοδήποτε σημείο της λίστας.
+//
+///////////////////////////////////////////////////////////////////
 
-#include<stdio.h>
-#include <stdlib.h>
+#pragma once // #include το πολύ μία φορά
+
+#include <stdio.h>
 #include <string.h>
-#include "functions.h"
+#include <stdlib.h>
 
-typedef struct list* List;
-typedef struct list_node* LNode;
-typedef void* ptr;
-
-//creates and returns a list
-List list_create();
-
-// returns the size of the list
-int get_list_size(List);
-
-// inserts a new element(ptr) in the list, after the node
-void list_insert(List, LNode, ptr);
-
-// compares two nodes
-int compare_nodes(LNode, LNode);
-
-// removes the given's next node from the list
-void list_remove(List, LNode);
-
-// returns the first node of the list
-LNode list_first_node(List);
-
-// returns the last node of the list
-LNode list_last_node(List);
-
-//returns the next node of the given one
-LNode list_node_next(List, LNode);
-
-// returns the ginen's node value
-ptr list_get_value(List, LNode);
-
-// find the element that is equal to ptr, returns the node
-LNode list_find(List, ptr);
-
-// free memory
-void list_delete(List);
+// Οι σταθερές αυτές συμβολίζουν εικονικούς κόμβους _πριν_ τον πρώτο και _μετά_ τον τελευταίο
+#define BLIST_BOF (BListNode)1
+#define BLIST_EOF (BListNode)0
 
 
-#endif
+// Λίστες και κόμβοι αναπαριστώνται από τους τύπους BList και BListNode. Ο χρήστης δε χρειάζεται να γνωρίζει το περιεχόμενο
+// των τύπων αυτών, απλά χρησιμοποιεί τις συναρτήσεις blist_<foo> που δέχονται και επιστρέφουν BList / BListNode.
+//
+// Οι τύποι αυτοί ορίζονται ως pointers στα "struct blist" και "struct blist_node" των οποίων το
+// περιεχόμενο είναι άγνωστο (incomplete structs), και εξαρτάται από την υλοποίηση του ADT BList.
+//
+typedef struct blist* BList;
+typedef struct blist_node* BListNode;
+typedef void* Pointer;
+
+
+// Δημιουργεί και επιστρέφει μια νέα λίστα.
+// Αν destroy_value != NULL, τότε καλείται destroy_value(value) κάθε φορά που αφαιρείται ένα στοιχείο.
+
+BList blist_create();
+
+// Επιστρέφει τον αριθμό στοιχείων που περιέχει η λίστα.
+
+int blist_size(BList blist);
+
+// Προσθέτει έναν νέο κόμβο __πριν__ τον node (δηλαδή αν ο node είχε θέση i στη λίστα, o νέος κόμβος
+// παίρνει τη θέση i και ο node πηγαίνει στην i+1), ή στo τέλος αν node == BLIST_EOF, με περιεχόμενο value.
+
+BListNode blist_insert(BList blist, BListNode node, Pointer value);
+
+// Αφαιρεί τον κόμβο node (πρέπει να υπάρχει στη λίστα).
+
+void blist_remove(BList blist, BListNode node);
+void blist_set_value(BListNode node, BListNode targer);
+// Επιστρέφει την πρώτη τιμή που είναι ισοδύναμη με value
+// (με βάση τη συνάρτηση compare), ή NULL αν δεν υπάρχει
+
+Pointer blist_find(BList blist, Pointer value);
+
+// Ελευθερώνει όλη τη μνήμη που δεσμεύει η λίστα blist.
+// Οποιαδήποτε λειτουργία πάνω στη λίστα μετά το destroy είναι μη ορισμένη.
+
+void blist_destroy(BList blist);
+
+void blist_print(BList);
+
+
+// Διάσχιση της λίστας /////////////////////////////////////////////
+//
+
+BListNode create_node(Pointer value);
+// Επιστρέφουν τον πρώτο και τον τελευταίο κομβο της λίστας, ή BLIST_BOF / BLIST_EOF αντίστοιχα αν η λίστα είναι κενή
+
+BListNode blist_first(BList blist);
+BListNode blist_last(BList blist);
+
+// Επιστρέφουν τον επόμενο και τον προηγούμενο κομβο του node, ή BLIST_EOF / BLIST_BOF
+// αντίστοιχα αν ο node δεν έχει επόμενο / προηγούμενο.
+
+//BListNode blist_next(BList blist, BListNode node);
+//BListNode blist_previous(BList blist, BListNode node);
+BListNode blist_next(BList blist, BListNode node);
+BListNode blist_previous(BListNode node);
+
+// Επιστρέφει το περιεχόμενο του κόμβου node
+
+//Pointer blist_node_value(BList blist, BListNode node);
+Pointer blist_node_value(BList blist, BListNode node);
+
+// Βρίσκει τo πρώτo στοιχείο που είναι ισοδύναμο με value (με βάση τη συνάρτηση compare).
+// Επιστρέφει τον κόμβο του στοιχείου, ή BLIST_EOF αν δεν βρεθεί.
+
+//BListNode blist_find_node(BList blist, Pointer value, CompareFunc compare);
+BListNode blist_find_node(BList blist, Pointer value);
+BListNode blist_find_next(BList blist, Pointer value);
