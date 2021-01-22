@@ -1,25 +1,26 @@
 #include "functions.h"
 
-
-int copy_directory(char* dest, char* source)
+int copy_directory(char* dest_directory, char* source_directory)
 {
     DIR *origin, *destination;
     struct dirent *dirent_org, *dirent_des;
     struct stat buf_org, buf_des;
-    char* file_names[10];
-    int copy = -1, source_has_dir = 0, dest_has_dir = 0;
+    char* dfile_name, *sfile_name, *to_be_copied, *curr_file, *to_be_deleted;
+    int flag = 0;
+    List source_files = list_create();
+    List dest_files = list_create();
 
-    origin = opendir(source);
+    origin = opendir(source_directory);
     if(origin == NULL)
     {
         perror("Opening directory");
         exit(1);
     }
-    destination = opendir(dest);
+    destination = opendir(dest_directory);
     if(destination == NULL)
     {
-        int f = create_directory(dest);
-        destination = opendir(dest);
+        int f = create_directory(dest_directory);
+        destination = opendir(dest_directory);
         if(f == -1)
         {
             perror("Creating directory");
@@ -28,13 +29,121 @@ int copy_directory(char* dest, char* source)
         
     }
     
-    stat(source, &buf_org);
-    stat(dest, &buf_des);
+    stat(source_directory, &buf_org);
+    stat(dest_directory, &buf_des);
 
-    int flag = 0, first = 0;
-    int not_same = 0, sum = 0;
-    char* name, *old;
     while( (dirent_org = readdir(origin)) )
+    {
+        if(!(strcmp(dirent_org->d_name, ".")))
+        {
+            continue;
+        }
+        else if(!(strcmp(dirent_org->d_name, "..")))
+        {
+            continue;
+        }
+        else
+        {
+            sfile_name = malloc(strlen(dirent_org->d_name)+1);
+            strcpy(sfile_name, dirent_org->d_name);
+            list_insert(source_files, NULL, sfile_name);
+        }
+        
+    }
+
+    while( (dirent_des = readdir(destination)) )
+    {
+        if(!(strcmp(dirent_des->d_name, ".")))
+        {
+            continue;
+        }
+        else if(!(strcmp(dirent_des->d_name, "..")))
+        {
+            continue;
+        }
+        else
+        {
+            dfile_name = malloc(strlen(dirent_des->d_name)+1);
+            strcpy(dfile_name, dirent_des->d_name);
+            list_insert(dest_files, NULL, dfile_name);
+        }
+    }
+
+    for(LNode node = list_first_node(source_files); node != NULL; node = list_node_next(source_files, node))
+    {
+        LNode temp = list_find(dest_files, list_get_value(source_files, node)); // change list find
+        if( temp != NULL )
+        {
+            list_remove(dest_files, temp);  //already exists
+        }
+        else    // copy to destination
+        {
+            char* str1 = (char*)list_get_value(source_files, node);
+            to_be_copied = malloc(strlen(dest_directory)+strlen(str1)+2);
+            strcpy(to_be_copied, dest_directory);
+            strcat(to_be_copied, "/");
+            strcat(to_be_copied, str1);
+
+            char* str2 = (char*)list_get_value(source_files, node);
+            curr_file = malloc(strlen(source_directory)+strlen(str2)+2);
+            strcpy(curr_file, source_directory);
+            strcat(curr_file, "/");
+            strcat(curr_file, str2);
+            
+            if(get_list_size(dest_files))
+            {
+                if(is_directory(curr_file))
+                {
+                    if(copy_directory(to_be_copied, curr_file))
+                    {
+                        flag = 1;
+                    }
+                }
+                else if(is_file(curr_file))
+                {
+                    if(compare_files(to_be_copied, curr_file))
+                    {
+                        flag = 1;
+                        create_file(to_be_copied);
+                        copy_files(to_be_copied, curr_file, 256);
+                    }
+                }
+            }
+            else
+            {
+                flag = 1;
+                create_file(to_be_copied);
+                copy_files(to_be_copied, curr_file, 256);
+            }
+            
+            free(to_be_copied);
+            free(curr_file);
+        }
+        
+    }
+   
+   for(LNode node = list_first_node(dest_files); node != NULL; node = list_node_next(dest_files, node))
+   {
+        flag = 1;
+        char* str1 = (char*)list_get_value(dest_files, node);
+        to_be_deleted = malloc(strlen(dest_directory)+strlen(str1)+2);
+        strcpy(to_be_deleted, dest_directory);
+        strcat(to_be_deleted, "/");
+        strcat(to_be_deleted, str1);
+
+        remove(to_be_deleted);
+        free(to_be_deleted);
+   }
+
+    closedir(origin);
+    closedir(destination);
+
+    return flag;
+
+    list_delete(source_files);
+    list_delete(dest_files);
+    
+    /*while( (dirent_org = readdir(origin)) )
     {
         if(!(strcmp(dirent_org->d_name, ".")))
         {
@@ -56,21 +165,21 @@ int copy_directory(char* dest, char* source)
 
         while( (dirent_des = readdir(destination)) ) 
         {
+            if(!(strcmp(dirent_des->d_name, ".")))
+            {
+                continue;
+            }
+            if(!(strcmp(dirent_des->d_name, "..")))
+            {
+                continue;
+            }
+
             copy++;
             if(first == 0)
             {
                 file_names[copy] = malloc(strlen(dirent_des->d_name)+1);
                 strcpy(file_names[copy] , dirent_des->d_name);
                 sum++;
-            }
-            
-            if(!(strcmp(dirent_des->d_name, ".")))
-            {
-                continue;
-            }
-            if(!(strcmp(dirent_org->d_name, "..")))
-            {
-                continue;
             }
 
             strcpy(name,dest);
@@ -90,11 +199,11 @@ int copy_directory(char* dest, char* source)
                 }
                 else if(n == 0)
                 {
-                    if(copy < sum)
-                    {
-                        strcpy(file_names[copy], " ");
+                    //if(copy < sum)
+                    //{
+                        strcpy(file_names[copy-1], " ");
                         flag = 1;
-                    }
+                    //}
                     
                 }   
             }
@@ -105,7 +214,7 @@ int copy_directory(char* dest, char* source)
                     int c = compare_files(name, old);
                     if(!c)
                     {
-                        strcpy(file_names[copy], " ");
+                        strcpy(file_names[copy-1], " ");
                         flag = 1;
                     }
                 }
@@ -118,6 +227,7 @@ int copy_directory(char* dest, char* source)
         }
         if(flag == 0)
         {
+            printf("&&&&&&& %s\n", name);
             not_same = 1;
             create_file(name);
             copy_files(name, old, 256);
@@ -136,15 +246,7 @@ int copy_directory(char* dest, char* source)
 
     for(int i = 0; i < sum; i++)
     {
-        if( !(strcmp(file_names[i], ".")))
-        {
-            continue;
-        }
-        else if( !(strcmp(file_names[i], "..")))
-        {
-            continue;
-        }
-        else if( !(strcmp(file_names[i], " ")))
+        if( !(strcmp(file_names[i], " ")))
         {
             continue;
         }
@@ -176,7 +278,7 @@ int copy_directory(char* dest, char* source)
     {
         return 1;
     }
-    return 0;
+    return 0;*/
 }
 
 int create_file(char* name)
@@ -309,25 +411,3 @@ int compare_files(char* dest,char* source)
     return 1;   
 }
 
-/*void RecDir(char *path, int flag) {
-    DIR *dp = opendir(path);
-    if(!dp) {
-        perror(path);
-        return;
-    }
-    struct dirent *ep;
-    char newdir[512];
-    //printf(BLUE "\n%s :\n" WHITE, path);
-    while((ep = readdir(dp)))
-        if(strncmp(ep->d_name, ".", 1))
-            //printf(GREEN "\t%s\n" WHITE, ep->d_name);
-    closedir(dp);
-    dp = opendir(path);
-    while((ep = readdir(dp))) if(strncmp(ep->d_name, ".", 1)) {
-        if(flag && ep->d_type == 4) {
-            sprintf(newdir, "%s/%s", path, ep->d_name);
-            RecDir(newdir, 1);
-        }
-    }
-    closedir(dp);
-}*/
