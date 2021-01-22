@@ -149,10 +149,6 @@ void blist_destroy(BList blist)
 	while (node != NULL) {			
 		BListNode next = node->next;		// το node->next _πριν_ κάνουμε free
 
-		// Καλούμε τη destroy_value, αν υπάρχει 
-		//if (node != blist->dummy && blist->destroy_value != NULL)
-		//	blist->destroy_value(node->value);
-
 		free(node);
 		node = next;
 	}
@@ -160,6 +156,7 @@ void blist_destroy(BList blist)
 	// Τέλος free το ίδιο το struct
 	free(blist);
 }
+
 
 BListNode create_node(Pointer value)				// συνάρτηση που δημιοργεί και επιστρέφει ενα blist node
 {

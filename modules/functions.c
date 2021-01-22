@@ -58,7 +58,6 @@ int copy_directory(char* dest_directory, char* source_directory)
             {
                 blist_insert(source_files, BLIST_EOF, dirent_org->d_name);
             }
-            //free(sfile_name);
         }
         
     }
@@ -87,7 +86,6 @@ int copy_directory(char* dest_directory, char* source_directory)
             {
                 blist_insert(dest_files, BLIST_EOF, dirent_des->d_name);           
             }
-            //free(dfile_name);
         }
     }
 
@@ -199,10 +197,10 @@ int copy_directory(char* dest_directory, char* source_directory)
     closedir(origin);
     closedir(destination);
 
-    //list_delete(source_files);
-   // list_delete(dest_files);
-   // list_delete(source_dir);
-    //list_delete(dest_dir);
+    blist_destroy(source_files);
+    blist_destroy(dest_files);
+    blist_destroy(source_dir);
+    blist_destroy(dest_dir);
 
     return flag;
 }
