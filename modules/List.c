@@ -104,7 +104,9 @@ void list_remove(List l, LNode node)
 
 LNode list_first_node(List l)
 {
-    return l->dummy->next;                 // returns first node after the dummy node
+    if(get_list_size(l))
+        return l->dummy->next;                 // returns first node after the dummy node
+    return NULL;
 }
 
 LNode list_last_node(List l)               // if the last node of the list is the dummy
