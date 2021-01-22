@@ -94,10 +94,10 @@ int copy_directory(char* dest_directory, char* source_directory)
     for(BListNode node = blist_first(source_files); node != BLIST_EOF; node = blist_next(source_files, node))
     {
         BListNode temp = blist_find_node(dest_files, blist_node_value(source_files, node)) ;
-        
+       //BListNode prev = blist_previous(node);
         if( temp != NULL )
         {
-            blist_remove(dest_files, node);  //already exists
+            blist_remove(dest_files, temp);  //already exists
         }
         else    // copy to destination
         {
@@ -123,7 +123,7 @@ int copy_directory(char* dest_directory, char* source_directory)
                 }
                 else
                 {
-                    blist_remove(dest_files, node);
+                    blist_remove(dest_files, temp);
                 }
             }
             else
@@ -136,16 +136,16 @@ int copy_directory(char* dest_directory, char* source_directory)
             free(to_be_copied);
             free(curr_file);
         }
-        
+        //node = prev;
     }
 
     for(BListNode node = blist_first(source_dir); node != BLIST_EOF; node = blist_next(source_dir, node))
     {
         BListNode temp = blist_find_node(dest_dir, blist_node_value(source_dir, node)) ;
-       
+        //BListNode prev = blist_previous(node);
         if( temp != NULL )
         {
-                blist_remove(dest_dir, node);  //already exists
+                blist_remove(dest_dir, temp);  //already exists
         }
         else    // copy to destination
         {
@@ -163,7 +163,7 @@ int copy_directory(char* dest_directory, char* source_directory)
             
             if(!(copy_directory(to_be_copied, curr_file)))
             {
-                blist_remove(dest_dir, node);
+                blist_remove(dest_dir, temp);
             }
             else
             {
@@ -174,9 +174,11 @@ int copy_directory(char* dest_directory, char* source_directory)
             free(to_be_copied);
             free(curr_file);
         }
+
+        //node = prev;
     }
    
-   for(BListNode node = blist_first(source_dir); node != BLIST_EOF; node = blist_next(source_dir, node))
+   for(BListNode node = blist_first(dest_files); node != BLIST_EOF; node = blist_next(dest_files, node))
    {
         if( !(blist_size(dest_files) ) )
         {
@@ -193,7 +195,7 @@ int copy_directory(char* dest_directory, char* source_directory)
         free(to_be_deleted);
    }
 
-    for(BListNode node = blist_first(source_dir); node != BLIST_EOF; node = blist_next(source_dir, node))
+    for(BListNode node = blist_first(dest_dir); node != BLIST_EOF; node = blist_next(dest_dir, node))
    {
         if( !(blist_size(dest_dir) ) )
         {
