@@ -95,87 +95,71 @@ int copy_directory(char* dest_directory, char* source_directory)
     {
         BListNode temp = blist_find_node(dest_files, blist_node_value(source_files, node)) ;
        //BListNode prev = blist_previous(node);
+       char* str1 = (char*)blist_node_value(source_files, node);
+        to_be_copied = malloc(strlen(dest_directory)+strlen(str1)+2);
+        strcpy(to_be_copied, dest_directory);
+        strcat(to_be_copied, "/");
+        strcat(to_be_copied, str1);
+
+        char* str2 = (char*)blist_node_value(source_files, node);
+        curr_file = malloc(strlen(source_directory)+strlen(str2)+2);
+        strcpy(curr_file, source_directory);
+        strcat(curr_file, "/");
+        strcat(curr_file, str2);
+            
         if( temp != NULL )
         {
-            blist_remove(dest_files, temp);  //already exists
-        }
-        else    // copy to destination
-        {
-            char* str1 = (char*)blist_node_value(source_files, node);
-            to_be_copied = malloc(strlen(dest_directory)+strlen(str1)+2);
-            strcpy(to_be_copied, dest_directory);
-            strcat(to_be_copied, "/");
-            strcat(to_be_copied, str1);
-
-            char* str2 = (char*)blist_node_value(source_files, node);
-            curr_file = malloc(strlen(source_directory)+strlen(str2)+2);
-            strcpy(curr_file, source_directory);
-            strcat(curr_file, "/");
-            strcat(curr_file, str2);
-            
-            if(blist_size(dest_files))
-            {
-                if(compare_files(to_be_copied, curr_file))
-                {
-                    flag = 1;
-                    create_file(to_be_copied);
-                    copy_files(to_be_copied, curr_file, 256);
-                }
-                else
-                {
-                    blist_remove(dest_files, temp);
-                }
-            }
-            else
+            if(compare_files(to_be_copied, curr_file))
             {
                 flag = 1;
-                create_file(to_be_copied);
                 copy_files(to_be_copied, curr_file, 256);
             }
             
-            free(to_be_copied);
-            free(curr_file);
+            blist_remove(dest_files, temp);  //already exists
+            
         }
-        //node = prev;
+        else    // copy to destination
+        {
+            flag = 1;
+            create_file(to_be_copied);
+            copy_files(to_be_copied, curr_file, 256);
+            
+        }
+            free(to_be_copied);
+            free(curr_file);    
     }
 
     for(BListNode node = blist_first(source_dir); node != BLIST_EOF; node = blist_next(source_dir, node))
     {
         BListNode temp = blist_find_node(dest_dir, blist_node_value(source_dir, node)) ;
-        //BListNode prev = blist_previous(node);
+
+        char* str1 = (char*)blist_node_value(source_dir, node);
+        to_be_copied = malloc(strlen(dest_directory)+strlen(str1)+2);
+        strcpy(to_be_copied, dest_directory);
+        strcat(to_be_copied, "/");
+        strcat(to_be_copied, str1);
+
+        char* str2 = (char*)blist_node_value(source_dir, node);
+        curr_file = malloc(strlen(source_directory)+strlen(str2)+2);
+        strcpy(curr_file, source_directory);
+        strcat(curr_file, "/");
+        strcat(curr_file, str2);
         if( temp != NULL )
         {
-                blist_remove(dest_dir, temp);  //already exists
+            if(copy_directory(to_be_copied, curr_file))
+            {
+                flag = 1;
+            }
+            blist_remove(dest_dir, temp);
         }
         else    // copy to destination
         {
-            char* str1 = (char*)blist_node_value(source_dir, node);
-            to_be_copied = malloc(strlen(dest_directory)+strlen(str1)+2);
-            strcpy(to_be_copied, dest_directory);
-            strcat(to_be_copied, "/");
-            strcat(to_be_copied, str1);
-
-            char* str2 = (char*)blist_node_value(source_dir, node);
-            curr_file = malloc(strlen(source_directory)+strlen(str2)+2);
-            strcpy(curr_file, source_directory);
-            strcat(curr_file, "/");
-            strcat(curr_file, str2);
-            
-            if(!(copy_directory(to_be_copied, curr_file)))
-            {
-                blist_remove(dest_dir, temp);
-            }
-            else
-            {
-                flag=1;
-            }
-            
-
-            free(to_be_copied);
-            free(curr_file);
+            copy_directory(to_be_copied, curr_file);
+            flag =1;
         }
 
-        //node = prev;
+            free(to_be_copied);
+            free(curr_file);   
     }
    
    for(BListNode node = blist_first(dest_files); node != BLIST_EOF; node = blist_next(dest_files, node))
