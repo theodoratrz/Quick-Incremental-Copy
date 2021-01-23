@@ -2,18 +2,28 @@
 MODULES = ./modules
 INCLUDE = ./include
 
-# compiler
-CC = gcc
+all:	quic \
+		directories \
+		files \
+		List \
 
-# Compile options. Το -I<dir> λέει στον compiler να αναζητήσει εκεί include files
-CFLAGS = -Wall -g -I$(INCLUDE)
+clean: 
+	rm -f 	quic \
+		directories.o \
+		files.o \
+		List.o \
 
-# Αρχεία .o
+List: $(MODULES)/List.c
+	gcc -Wall -g -I$(INCLUDE) $(MODULES)/List.c -c 
 
-OBJS =  $(MODULES)/quic.o $(MODULES)/is_directory.o $(MODULES)/functions.o $(MODULES)/List.o
+files: $(MODULES)/files.c $(MODULES)/List.c
+	gcc -Wall -g -I$(INCLUDE) $(MODULES)/files.c $(MODULES)/List.c -c 
 
-# Το εκτελέσιμο πρόγραμμα
-EXEC = quic
+directories: $(MODULES)/directories.c $(MODULES)/files.c
+	gcc -Wall -g -I$(INCLUDE) $(MODULES)/directories.c $(MODULES)/files.c -c 
 
-$(EXEC): $(OBJS) 
-	$(CC) $(OBJS) -o $(EXEC) 
+quic: $(MODULES)/quic.c $(MODULES)/directories.c $(MODULES)/files.c $(MODULES)/List.c
+	gcc -Wall -g -I$(INCLUDE) $(MODULES)/quic.c $(MODULES)/directories.c $(MODULES)/files.c $(MODULES)/List.c -c
+
+
+

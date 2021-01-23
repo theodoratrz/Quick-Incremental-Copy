@@ -1,5 +1,4 @@
-#include "functions.h"
-#include "is_directory.h"
+#include "directories.h"
 
 int main(int argc, char* argv[])
 {
