@@ -1,3 +1,6 @@
+#ifndef DIRECTORIES_H
+#define DIRECTORIES_H
+
 #include "files.h"
 
 int copy_directory(char* dest, char* source);
@@ -9,3 +12,5 @@ int create_directory(char*);
 int remove_directory(char*);
 
 int is_directory(char*);
+
+#endif

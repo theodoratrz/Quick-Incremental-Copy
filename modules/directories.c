@@ -219,52 +219,61 @@ int create_directory(char* name)
     }
 }
 
-int remove_directory(char *path) {
-   DIR *d = opendir(path);
-   size_t path_len = strlen(path);
-   int r = -1;
+int remove_directory(char *name) 
+{
+    DIR *origin;
+    //size_t path_len;
+    struct dirent *p;
+    int i;
+    origin = opendir(name);
+    if(origin == NULL)
+    {
+        perror("Opening directory");
+        exit(1);
+    }
+    //path_len = strlen(name);
 
-   if (d) {
-      struct dirent *p;
+    i = 0;
+    while (!i && (p=readdir(origin))) 
+    {
+        int r = -1;
+        char *buffer;
+        //size_t len;
 
-      r = 0;
-      while (!r && (p=readdir(d))) {
-          int r2 = -1;
-          char *buf;
-          size_t len;
+        if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
+            continue;
 
-          /* Skip the names "." and ".." as we don't want to recurse on them. */
-          if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
-             continue;
+        //len = path_len + strlen(p->d_name) + 2; 
+        buffer = malloc(strlen(name)+ strlen(p->d_name) + 2);
 
-          len = path_len + strlen(p->d_name) + 2; 
-          buf = malloc(len);
+        //struct stat statbuf;
 
-          if (buf) {
-             struct stat statbuf;
+        //snprintf(buffer, len, "%s/%s", name, p->d_name);
+        strcpy(buffer, name);
+        strcat(buffer, "/");
+        strcat(buffer, p->d_name);
+        if(is_directory(buffer)) 
+        {
+            r = remove_directory(buffer);
+        }
+        else
+        {
+            r = unlink(buffer);
+        }
+        
+        free(buffer);
+        
+        i = r;
+    }
+    closedir(origin);
 
-             snprintf(buf, len, "%s/%s", path, p->d_name);
-             if (!stat(buf, &statbuf)) {
-                if (S_ISDIR(statbuf.st_mode))
-                   r2 = remove_directory(buf);
-                else
-                   r2 = unlink(buf);
-             }
-             free(buf);
-          }
-          r = r2;
-      }
-      closedir(d);
-   }
-
-   if (!r)
+   if (!i)
    {
-       r = rmdir(path);
-       printf("Directory removed: %s\n", path);
+       i = rmdir(name);
+       printf("Directory removed: %s\n", name);
    }
       
-
-   return r;
+   return i;
 }
 
 int is_directory(char* name)
