@@ -2,6 +2,13 @@
 
 int main(int argc, char* argv[])
 {
+    int hours, mins, secs;
+    struct timeval  now;
+	struct tm* old, *current;
+
+	gettimeofday(&now, NULL);			
+	old = localtime(&now.tv_sec);
+
     int verbose = 0, lnk = 0, del = 0, dest;
  
     if(argc < 3)
@@ -39,13 +46,20 @@ int main(int argc, char* argv[])
         printf("Copied Succesfully\n");
     }
 
+    // print statistics
     if(verbose)
     {
         printf("Total files/directories checked: %d\n", f.sum);
         printf("Total entities copied: %d\n", f.entities);
-        printf("Total time: %02d:%02d:%02d\n", f.hours, f.mins, f.secs);
     }
     
+    gettimeofday(&now, NULL);			
+	current = localtime(&now.tv_sec);
+
+    hours = (current->tm_hour) - (old->tm_hour);
+    mins = (current->tm_min) - (old->tm_min);
+    secs = (current->tm_sec) - (old->tm_sec);
+    printf("Total time: %02d:%02d:%02d\n", hours, mins, secs);
 
     return 0;
 }

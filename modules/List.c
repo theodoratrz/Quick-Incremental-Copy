@@ -1,11 +1,4 @@
-///////////////////////////////////////////////////////////
-//
-// Υλοποίηση του ADT BList μέσω διπλά συνδεδεμένης λίστας.
-//
-///////////////////////////////////////////////////////////
-
 #include <stdlib.h>
-
 #include "List.h"
 
 int compare(Pointer p1, Pointer p2)
@@ -125,19 +118,8 @@ void blist_remove(BList blist, BListNode node)
 		node->next->prev = node->prev;			// και τον επόμενο του node με τον προηγούμενο του node
 	}
 	
-	/*if(blist->destroy_value != NULL)
-	{
-		blist->destroy_value(node->value);
-	}*/
-	
 	blist->size--;								// ενημέρωση του size
 	free(node);									// διαγράφουμε τον κόμβο
-}
-
-Pointer blist_find(BList blist, Pointer value) 
-{
-	BListNode node = blist_find_node(blist, value);
-	return node == NULL ? NULL : node->value;
 }
 
 void blist_destroy(BList blist) 
@@ -157,15 +139,6 @@ void blist_destroy(BList blist)
 	free(blist);
 }
 
-
-BListNode create_node(Pointer value)				// συνάρτηση που δημιοργεί και επιστρέφει ενα blist node
-{
-	BListNode node = malloc(sizeof(*node));
-	node->next = NULL;
-	node->prev = NULL;
-	node->value = value;
-	return node;
-}
 
 // Διάσχιση της λίστας /////////////////////////////////////////////
 
@@ -224,23 +197,3 @@ BListNode blist_find_node(BList blist, Pointer value)
 	return NULL;
 }
 
-// συνάρτηση που βρίσκει τον αμέσως επόμενο σε σειρά κόμβο βάσει των values και τον επιστρέφει
-BListNode blist_find_next(BList blist, Pointer value)				
-{
-	int counter = 0;
-	for (BListNode node = blist->dummy->next; node != NULL; node = node->next)
-	{
-		counter++;
-		if (compare(value, node->value) < 0)									// διάσχιση όλης της λίστας, καλούμε την compare μέχρι να επιστρέψει <0
-			return node;															
-	}
-	if(counter == 0)															// αν ο μετρητής είναι 0, η λίστα είναι κενή
-	{
-		return BLIST_BOF;
-	}
-	else																		// αν μπήκε στο loop αλλά δεν βρήκε κατάλληλο node τότε
-	{
-		return BLIST_EOF;														// δεν υπάρχει μεγαλύτερο value στη λίστα
-	}
-	
-}

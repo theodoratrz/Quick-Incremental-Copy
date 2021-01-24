@@ -7,16 +7,12 @@ struct statistics copy_directory(char* dest_directory, char* source_directory, i
     struct stat buf_org, buf_des;
     char* dfile_name, *sfile_name, *to_be_copied, *curr_file, *to_be_deleted;
     struct statistics s;
-    BList source_files = blist_create();
+
+    // create bi-directional lists and store the files/directories names
+    BList source_files = blist_create();    
     BList source_dir = blist_create();
     BList dest_files = blist_create();
     BList dest_dir = blist_create();
-    
-    struct timeval  now;
-	struct tm* old, *current;
-
-	gettimeofday(&now, NULL);			
-	old = localtime(&now.tv_sec);
 
     origin = opendir(source_directory);
     if(origin == NULL)
@@ -29,6 +25,7 @@ struct statistics copy_directory(char* dest_directory, char* source_directory, i
     s.entities = 0;
     s.flag = 0;
 
+    // if the destination doesn't exist, create a new directory
     destination = opendir(dest_directory);
     if(destination == NULL)
     {
@@ -45,25 +42,28 @@ struct statistics copy_directory(char* dest_directory, char* source_directory, i
     stat(source_directory, &buf_org);
     stat(dest_directory, &buf_des);
 
+    // read all the source directory and store the files/directories names in a list
     while( (dirent_org = readdir(origin)) )
     {
-        if(!(strcmp(dirent_org->d_name, ".")))
-        {
-            continue;
-        }
-        else if(!(strcmp(dirent_org->d_name, "..")))
+        // skip "." and ".."
+        if(!(strcmp(dirent_org->d_name, ".")) || !(strcmp(dirent_org->d_name, "..")))
         {
             continue;
         }
         else
         {
-            s.sum++;
+            s.sum++;    // keep record of how many files/directories are being explored
+            // allocate enough space for the whole path
             sfile_name = malloc(strlen(source_directory)+strlen(dirent_org->d_name)+2);
+            // create the path
             strcpy(sfile_name, source_directory);
             strcat(sfile_name, "/");
             strcat(sfile_name, dirent_org->d_name);
+            // directories are stored in a different list from files
             if(is_directory(sfile_name))
             {
+                // keep only the name not the path
+                // the path is easy to find 
                blist_insert(source_dir, BLIST_EOF, dirent_org->d_name);
             }
             else
@@ -74,24 +74,27 @@ struct statistics copy_directory(char* dest_directory, char* source_directory, i
         
     }
 
+    // read all the source directory and store the files/directories names in a list
     while( (dirent_des = readdir(destination)) )
     {
-        if(!(strcmp(dirent_des->d_name, ".")))
-        {
-            continue;
-        }
-        else if(!(strcmp(dirent_des->d_name, "..")))
+        // skip "." and ".."
+        if(!(strcmp(dirent_des->d_name, ".")) || !(strcmp(dirent_des->d_name, "..")))
         {
             continue;
         }
         else
         {
+            // allocate enough space for the whole path
             dfile_name = malloc(strlen(dest_directory)+strlen(dirent_des->d_name)+2);
+            // create the path
             strcpy(dfile_name, dest_directory);
             strcat(dfile_name, "/");
             strcat(dfile_name, dirent_des->d_name);
+            // directories are stored in a different list from files
             if(is_directory(dfile_name))
             {
+                // keep only the name not the path
+                // the path is easy to find
                 blist_insert(dest_dir, BLIST_EOF, dirent_des->d_name);          
             }
             else
@@ -101,10 +104,12 @@ struct statistics copy_directory(char* dest_directory, char* source_directory, i
         }
     }
 
+    // loop through source files and compare them to destination files
     for(BListNode node = blist_first(source_files); node != BLIST_EOF; node = blist_next(source_files, node))
     {
         BListNode temp = blist_find_node(dest_files, blist_node_value(source_files, node));
 
+        // create the paths
         char* str1 = (char*)blist_node_value(source_files, node);
         to_be_copied = malloc(strlen(dest_directory)+strlen(str1)+2);
         strcpy(to_be_copied, dest_directory);
@@ -116,14 +121,17 @@ struct statistics copy_directory(char* dest_directory, char* source_directory, i
         strcpy(curr_file, source_directory);
         strcat(curr_file, "/");
         strcat(curr_file, str2);
-            
+        
+        // if the file exists in the destination directory
         if( temp != NULL )
         {
+            // compare the files
             if(compare_files(to_be_copied, curr_file))
             {
+                // if they are not the same, copy again
                 s.flag = 1;
                 copy_files(to_be_copied, curr_file, 256);
-                s.entities++;
+                s.entities++;   // increase the sum of copied files
             }
             
             blist_remove(dest_files, temp);  //already exists
@@ -134,17 +142,20 @@ struct statistics copy_directory(char* dest_directory, char* source_directory, i
             s.flag = 1;
             create_file(to_be_copied);
             copy_files(to_be_copied, curr_file, 256);
-            s.entities++;
+            s.entities++;   // increase the sum of copied files
             
         }
             free(to_be_copied);
             free(curr_file);    
     }
 
+    // loop through source directories and compare them to destination directories
+    // if a file/directory exists in source and destination remove it from destination's list
     for(BListNode node = blist_first(source_dir); node != BLIST_EOF; node = blist_next(source_dir, node))
     {
-        BListNode temp = blist_find_node(dest_dir, blist_node_value(source_dir, node)) ;
+        BListNode temp = blist_find_node(dest_dir, blist_node_value(source_dir, node));
 
+        // create the path
         char* str1 = (char*)blist_node_value(source_dir, node);
         to_be_copied = malloc(strlen(dest_directory)+strlen(str1)+2);
         strcpy(to_be_copied, dest_directory);
@@ -156,21 +167,28 @@ struct statistics copy_directory(char* dest_directory, char* source_directory, i
         strcpy(curr_file, source_directory);
         strcat(curr_file, "/");
         strcat(curr_file, str2);
+
+        // if the directory exists in the destination directory
         if( temp != NULL )
         {
+            // recursive
+            // explore all the files of the directories
             struct statistics t = copy_directory(to_be_copied, curr_file, lnk, del);
+            // increase the total sum of files explored
             s.sum += t.sum;
             if(t.flag)
             {
-                s.entities += t.entities;
+                s.entities += t.entities;   // if the directories were not same, increease the num of copied files
                 s.flag = 1;
             }
-            blist_remove(dest_dir, temp);
+            blist_remove(dest_dir, temp);   // remove it from the list
         }
-        else    // copy to destination
+        else   // copy to destination
         {
+            // recursive
+            // explore all the files of the directories
             struct statistics t = copy_directory(to_be_copied, curr_file, lnk, del);
-            s.sum += t.sum;
+            s.sum += t.sum; // increase the total sum of files explored
             s.flag =1;
         }
 
@@ -178,37 +196,45 @@ struct statistics copy_directory(char* dest_directory, char* source_directory, i
             free(curr_file);   
     }
    
-   if(del)
+   if(del)  // if the flag delete == 1 => delete the files of destination that does not exist in source
    {
+       // loop through destination files and delete them(everything left doesn't exist in source)
        for(BListNode node = blist_first(dest_files); node != BLIST_EOF; node = blist_next(dest_files, node))
         {
-            if( !(blist_size(dest_files) ) )
+            if( !(blist_size(dest_files) ) )    // if there is nothing left , break
             {
                 break;
             }
+
+            // create the path
             char* str1 = (char*)blist_node_value(dest_files, node);
             to_be_deleted = malloc(strlen(dest_directory)+strlen(str1)+2);
             strcpy(to_be_deleted, dest_directory);
             strcat(to_be_deleted, "/");
             strcat(to_be_deleted, str1);
 
+            // remove the file
             remove(to_be_deleted);
             
             free(to_be_deleted);
         }
 
+        // loop through destination directories and delete them(everything left doesn't exist in source)
         for(BListNode node = blist_first(dest_dir); node != BLIST_EOF; node = blist_next(dest_dir, node))
         {
-            if( !(blist_size(dest_dir) ) )
+            if( !(blist_size(dest_dir) ) )  // if there is nothing left , break
             {
                 break;
             }
+
+            // create the path
             char* str1 = (char*)blist_node_value(dest_dir, node);
             to_be_deleted = malloc(strlen(dest_directory)+strlen(str1)+2);
             strcpy(to_be_deleted, dest_directory);
             strcat(to_be_deleted, "/");
             strcat(to_be_deleted, str1);
 
+            // remove directory recursively
             remove_directory(to_be_deleted);
             
             free(to_be_deleted);
@@ -223,13 +249,6 @@ struct statistics copy_directory(char* dest_directory, char* source_directory, i
     blist_destroy(dest_files);
     blist_destroy(source_dir);
     blist_destroy(dest_dir);
-
-    gettimeofday(&now, NULL);			
-	current = localtime(&now.tv_sec);
-
-    s.hours = (current->tm_hour) - (old->tm_hour);
-    s.mins = (current->tm_min) - (old->tm_min);
-    s.secs = (current->tm_sec) - (old->tm_sec);
 
     return s;
 }
@@ -248,52 +267,56 @@ int create_directory(char* name)
     }
 }
 
-int remove_directory(char *path) {
-   DIR *d = opendir(path);
-   size_t path_len = strlen(path);
-   int r = -1;
+int remove_directory(char *name) 
+{
+    DIR *origin;
+    struct dirent *p;
+    int i;
+    origin = opendir(name);
+    if(origin == NULL)
+    {
+        perror("Opening directory");
+        exit(1);
+    }
 
-   if (d) {
-      struct dirent *p;
+    i = 0;
+    while (!i && (p=readdir(origin))) 
+    {
+        int r = -1;
+        char *buffer;
+        //size_t len;
+   
+        if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
+            continue;
 
-      r = 0;
-      while (!r && (p=readdir(d))) {
-          int r2 = -1;
-          char *buf;
-          size_t len;
+        buffer = malloc(strlen(name)+ strlen(p->d_name) + 2);
+        strcpy(buffer, name);
+        strcat(buffer, "/");
+        strcat(buffer, p->d_name);
+        if(is_directory(buffer)) 
+        {
+            r = remove_directory(buffer);
+        }
+        else
+        {
+            r = unlink(buffer);
+        }
 
-          /* Skip the names "." and ".." as we don't want to recurse on them. */
-          if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
-             continue;
+        free(buffer);
 
-          len = path_len + strlen(p->d_name) + 2; 
-          buf = malloc(len);
+        i = r;
+    }
+    closedir(origin);
 
-          if (buf) {
-             struct stat statbuf;
-
-             snprintf(buf, len, "%s/%s", path, p->d_name);
-             if (!stat(buf, &statbuf)) {
-                if (S_ISDIR(statbuf.st_mode))
-                   r2 = remove_directory(buf);
-                else
-                   r2 = unlink(buf);
-             }
-             free(buf);
-          }
-          r = r2;
-      }
-      closedir(d);
-   }
-
-   if (!r)
-   {
-       r = rmdir(path);
-       printf("Directory removed: %s\n", path);
-   }
+        
+    if (!i)
+    {
+        i = rmdir(name);
+        printf("Directory removed: %s\n", name);
+    }
       
 
-   return r;
+   return i;
 }
 
 int is_directory(char* name)

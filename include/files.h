@@ -1,3 +1,6 @@
+#ifndef FILES_H
+#define FILES_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,3 +21,5 @@ int copy_files(char* , char*, int);
 int compare_files(char* , char*);
 
 int create_file(char*);
+
+#endif
