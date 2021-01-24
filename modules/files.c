@@ -14,6 +14,7 @@ int copy_files(char* dest, char* source, int BUFFSIZE)
 		return(-2);
 		}
 
+    // read from infile and write to outfile
 	while ( (nread=read(infile, buffer, BUFFSIZE) ) > 0 )
     {
 		if ( write(outfile,buffer,nread) < nread )
@@ -66,10 +67,13 @@ int compare_files(char* dest,char* source)
     stat(dest, &buf_des);
     stat(source, &buf_org);
 
+    // compare the size 
     if( (buf_des.st_size) == (buf_org.st_size) )
     {
+        // and the modified time
         if( (difftime(buf_des.st_mtime , buf_org.st_mtime)) > 0.0)   // source time 
         {
+            // if identical return 0
             return 0;
         }
 

@@ -280,25 +280,32 @@ int remove_directory(char *name)
     }
 
     i = 0;
+
+    // loop through the directory
     while (!i && (p=readdir(origin))) 
     {
         int r = -1;
         char *buffer;
-        //size_t len;
    
+        // skip "." and ".."
         if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
             continue;
 
+        // create the path
         buffer = malloc(strlen(name)+ strlen(p->d_name) + 2);
         strcpy(buffer, name);
         strcat(buffer, "/");
         strcat(buffer, p->d_name);
+
+        //if it is a directory
         if(is_directory(buffer)) 
         {
+            // recursive
             r = remove_directory(buffer);
         }
         else
         {
+            // remove the file
             r = unlink(buffer);
         }
 
@@ -311,6 +318,7 @@ int remove_directory(char *name)
         
     if (!i)
     {
+        // remove the directory
         i = rmdir(name);
         printf("Directory removed: %s\n", name);
     }

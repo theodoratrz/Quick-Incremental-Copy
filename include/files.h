@@ -16,10 +16,13 @@
 #define  PERM 	0644
 #define SIZE 256
 
-int copy_files(char* , char*, int);
+// function that copies from source to dest
+int copy_files(char* dest, char* source, int buffsize);
 
+// function that compares 2 files, return 0 if identical
 int compare_files(char* , char*);
 
+// function to create a file
 int create_file(char*);
 
 #endif

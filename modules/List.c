@@ -6,7 +6,7 @@ int compare(Pointer p1, Pointer p2)
     return strcmp(p1,p2);
 }
 
-// Ενα BList είναι pointer σε αυτό το struct
+// BList is a pointer to this struct
 
 struct blist {
 	BListNode dummy;				// χρησιμοποιούμε dummy κόμβο, ώστε ακόμα και η κενή λίστα να έχει έναν κόμβο.
@@ -22,12 +22,12 @@ struct blist_node {
 
 BList blist_create() 
 {
-	BList blist = malloc(sizeof(*blist));			// δημιουργούμε το struct
-	blist->size = 0;								// αρχικοποιούμε τις μεταβλητές
-	blist->dummy = malloc(sizeof(*blist->dummy));	// φτιάχνουμε τον dummy
+	BList blist = malloc(sizeof(*blist));			// allocate memory for struct
+	blist->size = 0;								// initialize variables
+	blist->dummy = malloc(sizeof(*blist->dummy));	// create a dummy node
 	blist->dummy->next = NULL;
 	blist->dummy->prev = NULL;
-	blist->last = blist->dummy;						// εφόσον η λίστα είναι άδεια, ο τελευταίος κόμβος δείχνει στο dummy
+	blist->last = blist->dummy;						// empty list => last node points to dummy
 	return blist;
 }
 
@@ -36,123 +36,117 @@ int blist_size(BList blist)
 	return blist->size;
 }
 
+// insert before node
 BListNode blist_insert(BList blist, BListNode node, Pointer value) 
 {
-	//Εισάγουμε πριν τον node
 	BListNode new = malloc(sizeof(*new));
 	BListNode dummy; 
-	if(node == BLIST_BOF)						// αν ο node δείχνει στην αρχή της λίστας
+	if(node == BLIST_BOF)						// node points at the beginning of the list
 	{
 		dummy = blist->dummy;					
 		new->value = value;						
 		new->next = dummy->next;				
-		dummy->next = new;						// εισάγουμε τον καινούριο κόμβο μετά τον dummy
+		dummy->next = new;						// insert new node after dummy node
 		new->prev = dummy;
 		if(blist->size == 0)
 		{
-			blist->last = new;					// αν η λίστα ήταν άδεια, ο τελευταίος κόμβος δείχνει στον κόμβο που προσθέσαμε
+			blist->last = new;					// if list is empty, last node points to new node
 		}
 		else
 		{
-			dummy->next->prev = new;			// αλλιώς μεταξύ του dummy και του πρώτου κόμβου
+			dummy->next->prev = new;			// else, after dummy
 		}
 		
-		blist->size++;							// ενημέρωση του size
+		blist->size++;							// increase size
 	}
-	else if(node == BLIST_EOF)					// αν ο δείκτης δείχνει στο τέλος της λίστας
+	else if(node == BLIST_EOF)					// node points at the end of the list
 	{
-		if(blist->size == 0)					// αν η λίστα είναι άδεια
+		if(blist->size == 0)					// if list is empty
 		{
 			dummy = blist->dummy;
 			new->value = value;
-			new->next = dummy->next;			// προσθέτουμε τον καινούριο κόμβο μετά τον dummy
+			new->next = dummy->next;			// add new node after dummy
 			dummy->next = new;
 			new->prev = dummy;
-			blist->last = new;					// ο τελευταίος κόμβος δείχνει στον κόμβο που προσθέσαμε
+			blist->last = new;					// last node points to new node
 		}
-		else									// αν δεν είναι άδεια
+		else									
 		{
 			new->value = value;
 			new->prev = blist->last;	
-			blist->last->next = new;			// προσθέτουμε τον καινούριο κόμβο μετά τον τελευταίο κόμβο
-			blist->last = new;					// ο τελευταίος κόμβος δείχνει στον κόμβο που προσθέσαμε
-			new->next = NULL;					// αφού ο καινούριος κόμβος μπήκε στο τέλος, ο επόμενος είναι NULL
+			blist->last->next = new;			// add new node after last node of the list
+			blist->last = new;					// last node points to new node
+			new->next = NULL;					// next of new is NULL
 		}
 		
-		blist->size++;							// ενημέρωση του size
+		blist->size++;							// increase size
 	} 
-	else										// αν η εισαγωγή θα γίνει σε τυχαία θέση μέσα στη λίστα
+	else										// random insert in the list
 	{
 		new->value = value;
-		new->next = node;						// συνδέουμε τον καινούριο κόμβο με τον node
-		new->prev = node->prev;					// συνδέουμε τον καινούριο κόμβο με τον προηγούμενο του node
-		node->prev->next = new;					// προσθέτουμε τον καινούριο κόμβο πριν τον node
-		node->prev = new;						// συνδέουμε τον node με τον καινούριο κόμβο
-		blist->size++;							// ενημέρωση του size
+		new->next = node;						// link new node with current node
+		new->prev = node->prev;					// link new node with current's previous
+		node->prev->next = new;					// add new node before current
+		node->prev = new;						// link node with current node
+		blist->size++;							// increase size
 	}
 	return new;
 	
 }
 
+// remove node
 void blist_remove(BList blist, BListNode node) 
 {
-	// αφαιρούμε τον node
 	BListNode previous = node->prev;
-	if( previous == NULL)						// αν ο προηγούμενος του node είναι NULL, σημαίνει ότι βρίσκεται στην αρχή της λίστας
+	if( previous == NULL)						// if node's previous is NULL, node is at the beginning of the list
 	{
-		previous = blist->dummy;				// άρα ο προηγούμενός του είναι ο dummy
+		previous = blist->dummy;				// previous node is dummy
 	}
 	else
 	{
-		previous = node->prev;					// αλλιώς, κρατάμε τον προηγούμενο κόμβο από το node
+		previous = node->prev;					// keep previous node
 	}
 	
-	if( node->next ==NULL)						// αν ο επόμενος του node είναι NULL, σημαίνει ότι βρίσκεται στο τέλος της λίστας 
+	if( node->next ==NULL)						// if node's next is NULL, node is at the end of the list
 	{
-		previous->next = NULL;					// ο προηγούμενος του node θα δείχνει τώρα NULL
-		blist->last = previous;					// ο τελευταίος κόμβος αλλάζει
+		previous->next = NULL;					// node's previous points to NULL
+		blist->last = previous;					// last node updated
 	}
-	else										// αλλιώς, συνδέουμε τον προηγούμενο του node με τον επόμενό του node
+	else										// else, link node's previous with node's next
 	{
 		previous->next = node->next;
-		node->next->prev = node->prev;			// και τον επόμενο του node με τον προηγούμενο του node
+		node->next->prev = node->prev;			// and node's next with node's previous
 	}
 	
-	blist->size--;								// ενημέρωση του size
-	free(node);									// διαγράφουμε τον κόμβο
+	blist->size--;								// decrease size
+	free(node);									// delete node
 }
 
 void blist_destroy(BList blist) 
 {
-	// Διασχίζουμε όλη τη λίστα και κάνουμε free όλους τους κόμβους,
-	// συμπεριλαμβανομένου και του dummy
-	//
+	// Iterate tthrough list and remove every node(including dummy)
 	BListNode node = blist->dummy;
 	while (node != NULL) {			
-		BListNode next = node->next;		// το node->next _πριν_ κάνουμε free
+		BListNode next = node->next;	
 
 		free(node);
 		node = next;
 	}
 
-	// Τέλος free το ίδιο το struct
+	// free the struct
 	free(blist);
 }
 
-
-// Διάσχιση της λίστας /////////////////////////////////////////////
-
 BListNode blist_first(BList blist) 
 {
-	// Ο πρώτος κόμβος είναι ο επόμενος του dummy.
 	return blist->dummy->next;
 }
 
 BListNode blist_last(BList blist) 
 {
-	if(blist->last == blist->dummy)					// αν η λίστα είναι κενή το last δείχνει στον dummy
+	if(blist->last == blist->dummy)					// empty list=>last node = dummy
 	{
-		return BLIST_EOF;							// αλλά εμείς επιστρέφουμε EOF
+		return BLIST_EOF;							// we don't return dummy(user doesn't know about dummy)
 	}
 	else
 	{
@@ -192,7 +186,7 @@ Pointer blist_node_value(BList blist, BListNode node)
 BListNode blist_find_node(BList blist, Pointer value) 
 {
 	for (BListNode node = blist->dummy->next; node != NULL; node = node->next)
-		if (compare(value, node->value) == 0)									// διάσχιση όλης της λίστας, καλούμε την compare μέχρι να επιστρέψει 0
+		if (compare(value, node->value) == 0)									// iterate list, call compare till it returns 0
 			return node;		
 	return NULL;
 }
