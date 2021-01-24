@@ -13,6 +13,8 @@ int compare(Pointer p1, Pointer p2)
     return strcmp(p1,p2);
 }
 
+// Ενα BList είναι pointer σε αυτό το struct
+
 struct blist {
 	BListNode dummy;				// χρησιμοποιούμε dummy κόμβο, ώστε ακόμα και η κενή λίστα να έχει έναν κόμβο.
 	BListNode last;					// δείκτης στον τελευταίο κόμβο, ή στον dummy (αν η λίστα είναι κενή)
@@ -132,6 +134,12 @@ void blist_remove(BList blist, BListNode node)
 	free(node);									// διαγράφουμε τον κόμβο
 }
 
+Pointer blist_find(BList blist, Pointer value) 
+{
+	BListNode node = blist_find_node(blist, value);
+	return node == NULL ? NULL : node->value;
+}
+
 void blist_destroy(BList blist) 
 {
 	// Διασχίζουμε όλη τη λίστα και κάνουμε free όλους τους κόμβους,
@@ -147,6 +155,16 @@ void blist_destroy(BList blist)
 
 	// Τέλος free το ίδιο το struct
 	free(blist);
+}
+
+
+BListNode create_node(Pointer value)				// συνάρτηση που δημιοργεί και επιστρέφει ενα blist node
+{
+	BListNode node = malloc(sizeof(*node));
+	node->next = NULL;
+	node->prev = NULL;
+	node->value = value;
+	return node;
 }
 
 // Διάσχιση της λίστας /////////////////////////////////////////////
@@ -204,4 +222,25 @@ BListNode blist_find_node(BList blist, Pointer value)
 		if (compare(value, node->value) == 0)									// διάσχιση όλης της λίστας, καλούμε την compare μέχρι να επιστρέψει 0
 			return node;		
 	return NULL;
+}
+
+// συνάρτηση που βρίσκει τον αμέσως επόμενο σε σειρά κόμβο βάσει των values και τον επιστρέφει
+BListNode blist_find_next(BList blist, Pointer value)				
+{
+	int counter = 0;
+	for (BListNode node = blist->dummy->next; node != NULL; node = node->next)
+	{
+		counter++;
+		if (compare(value, node->value) < 0)									// διάσχιση όλης της λίστας, καλούμε την compare μέχρι να επιστρέψει <0
+			return node;															
+	}
+	if(counter == 0)															// αν ο μετρητής είναι 0, η λίστα είναι κενή
+	{
+		return BLIST_BOF;
+	}
+	else																		// αν μπήκε στο loop αλλά δεν βρήκε κατάλληλο node τότε
+	{
+		return BLIST_EOF;														// δεν υπάρχει μεγαλύτερο value στη λίστα
+	}
+	
 }

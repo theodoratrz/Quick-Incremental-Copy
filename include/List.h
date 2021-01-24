@@ -1,5 +1,14 @@
-#ifndef LIST_H
-#define LIST_H
+///////////////////////////////////////////////////////////////////
+//
+// ADT BList
+//
+// Abstract bidirectional λίστα. Παρέχει σειριακή πρόσβαση στα
+// στοιχεία και στις δύο κατευθύνσεις, και προσθήκη/αφαίρεση σε
+// οποιοδήποτε σημείο της λίστας.
+//
+///////////////////////////////////////////////////////////////////
+
+#pragma once // #include το πολύ μία φορά
 
 #include <stdio.h>
 #include <string.h>
@@ -9,6 +18,13 @@
 #define BLIST_BOF (BListNode)1
 #define BLIST_EOF (BListNode)0
 
+
+// Λίστες και κόμβοι αναπαριστώνται από τους τύπους BList και BListNode. Ο χρήστης δε χρειάζεται να γνωρίζει το περιεχόμενο
+// των τύπων αυτών, απλά χρησιμοποιεί τις συναρτήσεις blist_<foo> που δέχονται και επιστρέφουν BList / BListNode.
+//
+// Οι τύποι αυτοί ορίζονται ως pointers στα "struct blist" και "struct blist_node" των οποίων το
+// περιεχόμενο είναι άγνωστο (incomplete structs), και εξαρτάται από την υλοποίηση του ADT BList.
+//
 typedef struct blist* BList;
 typedef struct blist_node* BListNode;
 typedef void* Pointer;
@@ -31,12 +47,24 @@ BListNode blist_insert(BList blist, BListNode node, Pointer value);
 // Αφαιρεί τον κόμβο node (πρέπει να υπάρχει στη λίστα).
 
 void blist_remove(BList blist, BListNode node);
+void blist_set_value(BListNode node, BListNode targer);
+// Επιστρέφει την πρώτη τιμή που είναι ισοδύναμη με value
+// (με βάση τη συνάρτηση compare), ή NULL αν δεν υπάρχει
+
+Pointer blist_find(BList blist, Pointer value);
 
 // Ελευθερώνει όλη τη μνήμη που δεσμεύει η λίστα blist.
 // Οποιαδήποτε λειτουργία πάνω στη λίστα μετά το destroy είναι μη ορισμένη.
 
 void blist_destroy(BList blist);
 
+void blist_print(BList);
+
+
+// Διάσχιση της λίστας /////////////////////////////////////////////
+//
+
+BListNode create_node(Pointer value);
 // Επιστρέφουν τον πρώτο και τον τελευταίο κομβο της λίστας, ή BLIST_BOF / BLIST_EOF αντίστοιχα αν η λίστα είναι κενή
 
 BListNode blist_first(BList blist);
@@ -60,6 +88,4 @@ Pointer blist_node_value(BList blist, BListNode node);
 
 //BListNode blist_find_node(BList blist, Pointer value, CompareFunc compare);
 BListNode blist_find_node(BList blist, Pointer value);
-
-
-#endif
+BListNode blist_find_next(BList blist, Pointer value);

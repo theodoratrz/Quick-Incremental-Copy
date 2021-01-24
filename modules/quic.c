@@ -29,12 +29,8 @@ int main(int argc, char* argv[])
         }
     }
     
-    int flag = copy_directory( argv[argc-1], argv[argc-2]);
-    if(flag == -1)
-    {
-        printf("error copying files\n");
-    }
-    else if(flag == 0)
+    struct statistics f = copy_directory( argv[argc-1], argv[argc-2], lnk, del);
+    if(f.flag == 0)
     {
         printf("Directories are the same, no need for copying\n");
     }
@@ -42,6 +38,14 @@ int main(int argc, char* argv[])
     {
         printf("Copied Succesfully\n");
     }
+
+    if(verbose)
+    {
+        printf("Total files/directories checked: %d\n", f.sum);
+        printf("Total entities copied: %d\n", f.entities);
+        printf("Total time: %02d:%02d:%02d\n", f.hours, f.mins, f.secs);
+    }
     
+
     return 0;
 }

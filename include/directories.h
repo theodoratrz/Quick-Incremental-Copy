@@ -1,9 +1,16 @@
-#ifndef DIRECTORIES_H
-#define DIRECTORIES_H
-
 #include "files.h"
 
-int copy_directory(char* dest, char* source);
+struct statistics
+{
+    int hours;
+    int mins;
+    int secs;
+    int sum;
+    int entities;
+    int flag;
+};
+
+struct statistics copy_directory(char* dest, char* source, int lnk, int del);
 
 int compare_directories(DIR* , DIR*);
 
@@ -12,5 +19,3 @@ int create_directory(char*);
 int remove_directory(char*);
 
 int is_directory(char*);
-
-#endif

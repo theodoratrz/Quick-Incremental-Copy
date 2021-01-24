@@ -1,16 +1,22 @@
 #include "directories.h"
 
-int copy_directory(char* dest_directory, char* source_directory)
+struct statistics copy_directory(char* dest_directory, char* source_directory, int lnk, int del)
 {
     DIR *origin, *destination;
     struct dirent *dirent_org, *dirent_des;
     struct stat buf_org, buf_des;
     char* dfile_name, *sfile_name, *to_be_copied, *curr_file, *to_be_deleted;
-    int flag = 0;
+    struct statistics s;
     BList source_files = blist_create();
     BList source_dir = blist_create();
     BList dest_files = blist_create();
     BList dest_dir = blist_create();
+    
+    struct timeval  now;
+	struct tm* old, *current;
+
+	gettimeofday(&now, NULL);			
+	old = localtime(&now.tv_sec);
 
     origin = opendir(source_directory);
     if(origin == NULL)
@@ -18,6 +24,11 @@ int copy_directory(char* dest_directory, char* source_directory)
         perror("Opening directory");
         exit(1);
     }
+
+    s.sum = 1;
+    s.entities = 0;
+    s.flag = 0;
+
     destination = opendir(dest_directory);
     if(destination == NULL)
     {
@@ -46,6 +57,7 @@ int copy_directory(char* dest_directory, char* source_directory)
         }
         else
         {
+            s.sum++;
             sfile_name = malloc(strlen(source_directory)+strlen(dirent_org->d_name)+2);
             strcpy(sfile_name, source_directory);
             strcat(sfile_name, "/");
@@ -91,9 +103,9 @@ int copy_directory(char* dest_directory, char* source_directory)
 
     for(BListNode node = blist_first(source_files); node != BLIST_EOF; node = blist_next(source_files, node))
     {
-        BListNode temp = blist_find_node(dest_files, blist_node_value(source_files, node)) ;
-       //BListNode prev = blist_previous(node);
-       char* str1 = (char*)blist_node_value(source_files, node);
+        BListNode temp = blist_find_node(dest_files, blist_node_value(source_files, node));
+
+        char* str1 = (char*)blist_node_value(source_files, node);
         to_be_copied = malloc(strlen(dest_directory)+strlen(str1)+2);
         strcpy(to_be_copied, dest_directory);
         strcat(to_be_copied, "/");
@@ -109,8 +121,9 @@ int copy_directory(char* dest_directory, char* source_directory)
         {
             if(compare_files(to_be_copied, curr_file))
             {
-                flag = 1;
+                s.flag = 1;
                 copy_files(to_be_copied, curr_file, 256);
+                s.entities++;
             }
             
             blist_remove(dest_files, temp);  //already exists
@@ -118,9 +131,10 @@ int copy_directory(char* dest_directory, char* source_directory)
         }
         else    // copy to destination
         {
-            flag = 1;
+            s.flag = 1;
             create_file(to_be_copied);
             copy_files(to_be_copied, curr_file, 256);
+            s.entities++;
             
         }
             free(to_be_copied);
@@ -144,55 +158,63 @@ int copy_directory(char* dest_directory, char* source_directory)
         strcat(curr_file, str2);
         if( temp != NULL )
         {
-            if(copy_directory(to_be_copied, curr_file))
+            struct statistics t = copy_directory(to_be_copied, curr_file, lnk, del);
+            s.sum += t.sum;
+            if(t.flag)
             {
-                flag = 1;
+                s.entities += t.entities;
+                s.flag = 1;
             }
             blist_remove(dest_dir, temp);
         }
         else    // copy to destination
         {
-            copy_directory(to_be_copied, curr_file);
-            flag =1;
+            struct statistics t = copy_directory(to_be_copied, curr_file, lnk, del);
+            s.sum += t.sum;
+            s.flag =1;
         }
 
             free(to_be_copied);
             free(curr_file);   
     }
    
-   for(BListNode node = blist_first(dest_files); node != BLIST_EOF; node = blist_next(dest_files, node))
+   if(del)
    {
-        if( !(blist_size(dest_files) ) )
+       for(BListNode node = blist_first(dest_files); node != BLIST_EOF; node = blist_next(dest_files, node))
         {
-            break;
+            if( !(blist_size(dest_files) ) )
+            {
+                break;
+            }
+            char* str1 = (char*)blist_node_value(dest_files, node);
+            to_be_deleted = malloc(strlen(dest_directory)+strlen(str1)+2);
+            strcpy(to_be_deleted, dest_directory);
+            strcat(to_be_deleted, "/");
+            strcat(to_be_deleted, str1);
+
+            remove(to_be_deleted);
+            
+            free(to_be_deleted);
         }
-        char* str1 = (char*)blist_node_value(dest_files, node);
-        to_be_deleted = malloc(strlen(dest_directory)+strlen(str1)+2);
-        strcpy(to_be_deleted, dest_directory);
-        strcat(to_be_deleted, "/");
-        strcat(to_be_deleted, str1);
 
-        remove(to_be_deleted);
-        
-        free(to_be_deleted);
-   }
-
-    for(BListNode node = blist_first(dest_dir); node != BLIST_EOF; node = blist_next(dest_dir, node))
-   {
-        if( !(blist_size(dest_dir) ) )
+        for(BListNode node = blist_first(dest_dir); node != BLIST_EOF; node = blist_next(dest_dir, node))
         {
-            break;
-        }
-        char* str1 = (char*)blist_node_value(dest_dir, node);
-        to_be_deleted = malloc(strlen(dest_directory)+strlen(str1)+2);
-        strcpy(to_be_deleted, dest_directory);
-        strcat(to_be_deleted, "/");
-        strcat(to_be_deleted, str1);
+            if( !(blist_size(dest_dir) ) )
+            {
+                break;
+            }
+            char* str1 = (char*)blist_node_value(dest_dir, node);
+            to_be_deleted = malloc(strlen(dest_directory)+strlen(str1)+2);
+            strcpy(to_be_deleted, dest_directory);
+            strcat(to_be_deleted, "/");
+            strcat(to_be_deleted, str1);
 
-        remove_directory(to_be_deleted);
-        
-        free(to_be_deleted);
+            remove_directory(to_be_deleted);
+            
+            free(to_be_deleted);
+        }
    }
+   
 
     closedir(origin);
     closedir(destination);
@@ -202,7 +224,14 @@ int copy_directory(char* dest_directory, char* source_directory)
     blist_destroy(source_dir);
     blist_destroy(dest_dir);
 
-    return flag;
+    gettimeofday(&now, NULL);			
+	current = localtime(&now.tv_sec);
+
+    s.hours = (current->tm_hour) - (old->tm_hour);
+    s.mins = (current->tm_min) - (old->tm_min);
+    s.secs = (current->tm_sec) - (old->tm_sec);
+
+    return s;
 }
 
 int create_directory(char* name)
@@ -219,61 +248,52 @@ int create_directory(char* name)
     }
 }
 
-int remove_directory(char *name) 
-{
-    DIR *origin;
-    //size_t path_len;
-    struct dirent *p;
-    int i;
-    origin = opendir(name);
-    if(origin == NULL)
-    {
-        perror("Opening directory");
-        exit(1);
-    }
-    //path_len = strlen(name);
+int remove_directory(char *path) {
+   DIR *d = opendir(path);
+   size_t path_len = strlen(path);
+   int r = -1;
 
-    i = 0;
-    while (!i && (p=readdir(origin))) 
-    {
-        int r = -1;
-        char *buffer;
-        //size_t len;
+   if (d) {
+      struct dirent *p;
 
-        if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
-            continue;
+      r = 0;
+      while (!r && (p=readdir(d))) {
+          int r2 = -1;
+          char *buf;
+          size_t len;
 
-        //len = path_len + strlen(p->d_name) + 2; 
-        buffer = malloc(strlen(name)+ strlen(p->d_name) + 2);
+          /* Skip the names "." and ".." as we don't want to recurse on them. */
+          if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
+             continue;
 
-        //struct stat statbuf;
+          len = path_len + strlen(p->d_name) + 2; 
+          buf = malloc(len);
 
-        //snprintf(buffer, len, "%s/%s", name, p->d_name);
-        strcpy(buffer, name);
-        strcat(buffer, "/");
-        strcat(buffer, p->d_name);
-        if(is_directory(buffer)) 
-        {
-            r = remove_directory(buffer);
-        }
-        else
-        {
-            r = unlink(buffer);
-        }
-        
-        free(buffer);
-        
-        i = r;
-    }
-    closedir(origin);
+          if (buf) {
+             struct stat statbuf;
 
-   if (!i)
+             snprintf(buf, len, "%s/%s", path, p->d_name);
+             if (!stat(buf, &statbuf)) {
+                if (S_ISDIR(statbuf.st_mode))
+                   r2 = remove_directory(buf);
+                else
+                   r2 = unlink(buf);
+             }
+             free(buf);
+          }
+          r = r2;
+      }
+      closedir(d);
+   }
+
+   if (!r)
    {
-       i = rmdir(name);
-       printf("Directory removed: %s\n", name);
+       r = rmdir(path);
+       printf("Directory removed: %s\n", path);
    }
       
-   return i;
+
+   return r;
 }
 
 int is_directory(char* name)
