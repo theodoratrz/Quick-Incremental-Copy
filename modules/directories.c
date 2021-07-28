@@ -149,6 +149,7 @@ struct statistics copy_directory(char* dest_directory, char* source_directory, i
             free(curr_file);    
     }
 
+
     // loop through source directories and compare them to destination directories
     // if a file/directory exists in source and destination remove it from destination's list
     for(BListNode node = blist_first(source_dir); node != BLIST_EOF; node = blist_next(source_dir, node))

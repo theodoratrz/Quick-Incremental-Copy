@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "List.h"
 
+
 int compare(Pointer p1, Pointer p2)
 {
     return strcmp(p1,p2);

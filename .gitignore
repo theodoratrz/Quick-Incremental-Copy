@@ -8,7 +8,7 @@
 *.elf
 *destination
 *source
-*.vscode
+* .vscode
 
 
 # Linker output
