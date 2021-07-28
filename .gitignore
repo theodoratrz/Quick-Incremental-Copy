@@ -8,6 +8,8 @@
 *.elf
 *destination
 *source
+*.vscode
+
 
 # Linker output
 *.ilk
