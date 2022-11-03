@@ -27,7 +27,7 @@ If the i-nodes `a` and `t` are referring to directories, we have to recursively 
 
 `./quic -v -d origindir destdir`
 
-`origindir` is the source directory
-`destdir` is the destination directory
-`v` is a flag and prints info about choices/actions of the programm regarding to copying/deleting files.
-`d` is a flag that defines that the files that were deleted from the source directory must not exist in the destination folder.
+- `origindir` is the source directory
+- `destdir` is the destination directory
+- `v` is a flag and prints info about choices/actions of the programm regarding to copying/deleting files.
+- `d` is a flag that defines that the files that were deleted from the source directory must not exist in the destination folder.
