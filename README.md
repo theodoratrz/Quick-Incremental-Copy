@@ -13,8 +13,12 @@ We distinguish 4 cases:
 2. The `t` exists in T and is the same as the `a` in A: in this case we do nothing. This is the case where the quick incremental copy "wins" the simple `cp`.
 3. The `t` exists in T, but there is no equivelant in `a` in A: in this case the file from A was deleted and we have to update the T. 
 4. The `t` exists in T and it's not the same as the `a` in A: in this case we have to copy the content of the `a i-node` to `t i-node`.
+
   When 2 files are not the same:
   - obviously, we don't read the content of the files, because this is time-consuming.
-  - if a is a file and t is a directory
-  - if 
+  - if a refers to a file and t refers to a directory
+  - if a and t refer to directories, we check their content recursively
+  - if a and t refer to files with different size
+  - if a and t refer to files with the same size but the t is older than a 
+  
 If the i-nodes `a` and `t` are referring to directories, we have to recursively do the above steps.
